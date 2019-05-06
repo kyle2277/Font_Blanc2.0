@@ -1,6 +1,11 @@
 import java.util.*;
 import java.io.*;
+
+import org.ejml.data.*;
+import org.ejml.sparse.*;
 import org.ejml.simple.*;
+import org.ejml.sparse.csc.CommonOps_DSCC;
+
 import java.lang.Math;
 import java.sql.Timestamp;
 
@@ -8,9 +13,10 @@ public class PermutMatrixTest {
 
     public static String encrypt_key;
     public static int encrypt_key_val;
-    public static HashMap<Integer, SimpleMatrix> permut_map;
+    public static HashMap<Integer, DMatrixSparseCSC> permut_map;
     public static long bytes_processed;
     public static long bytes_remaining;
+    public static long file_length;
 
     public static final String log_path = "./log.txt";
     public static final String encrypt_tag = "encrypted_";
@@ -23,8 +29,9 @@ public class PermutMatrixTest {
         System.out.println("Encrypt key: " + encrypt_key);
         bytes_processed = 0;
         String EorD = args[2];
-        permut_map = new HashMap<Integer, SimpleMatrix>();
-        check_file(filePath);
+        permut_map = new HashMap<Integer, DMatrixSparseCSC>();
+        file_length = check_file(filePath);
+        bytes_remaining = file_length;
         if(EorD.equalsIgnoreCase("encrypt")) {
             FileInputStream en_in = null;
             FileOutputStream en_out = null;
@@ -40,20 +47,17 @@ public class PermutMatrixTest {
             }
 
         }
-
-        //generate permutation matrices
-        //gen_permut_mat(10, false);
-
     }
 
-    public static void check_file(String filePath) throws IOException {
+    public static long check_file(String filePath) throws IOException {
         File f = new File(filePath);
         if(f.exists()) {
-            bytes_remaining = f.length();
+            return f.length();
         } else {
             System.out.println("File " + filePath + " does not exist.");
             fatal("Input file path does not exist");
         }
+        return 0;
     }
 
     public static int getEncryptKeyVal() {
@@ -69,41 +73,54 @@ public class PermutMatrixTest {
         //encryption
         //String encryptMap = genLogBaseStr(Math.exp(1));
         //permutEncrypt(Character.getNumericValue(encryptMap.charAt(0)));
-        permutEncrypt((int) bytes_remaining, en_in, en_out, filePath);
+        if(bytes_remaining < 1024) {
+            // encrypt entire file with one permutation matrix
+            permutEncrypt((int) bytes_remaining, en_in, en_out);
+        } else {
+            //split into chunks
+            do{
+                permutEncrypt(1024, en_in, en_out);
+            } while(bytes_remaining >= 1024);
+            permutEncrypt((int) bytes_remaining, en_in, en_out);
+        }
+
     }
 
-    public static void permutEncrypt(int dimension, FileInputStream en_in, FileOutputStream en_out, String filePath) throws IOException {
-        SimpleMatrix encryptMat;
+    public static void permutEncrypt(int dimension, FileInputStream en_in, FileOutputStream en_out) throws IOException {
+        DMatrixSparseCSC encryptMat;
         if(permut_map.containsKey(dimension)) {
             encryptMat = permut_map.get(dimension);
         } else {
             encryptMat = gen_permut_mat(dimension, false);
             permut_map.put(dimension, encryptMat);
         }
-
         byte[] unencryptedBytes = new byte[dimension];
         en_in.read(unencryptedBytes, 0, dimension);
-        SimpleMatrix encryptedVec = encryptVec(dimension, unencryptedBytes, encryptMat);
+        System.out.println(Arrays.toString(unencryptedBytes));
+        DMatrixSparseCSC encryptedVec = encryptVec(dimension, unencryptedBytes, encryptMat);
         for(int i = 0; i < dimension; i++) {
             double write_dbl = encryptedVec.get(i, 0);
             byte write_byte = (byte) ((Math.round(write_dbl)) & 0xff);
-            System.out.println(write_byte);
-            en_out.write(write_byte);
+            //System.out.println(write_byte);
+            //en_out.write(write_byte);
         }
 
     }
 
-    public static SimpleMatrix encryptVec(int dimension, byte[] unencryptedBytes, SimpleMatrix encryptMat) {
-        double[][] intermediate = new double[dimension][1];
+    public static DMatrixSparseCSC encryptVec(int dimension, byte[] unencryptedBytes, DMatrixSparseCSC encryptMat) {
+        DMatrixSparseCSC vec = new DMatrixSparseCSC(dimension, 1, dimension);
         for(int i = 0; i < dimension; i++) {
-            intermediate[i][0] = unencryptedBytes[i];
+            vec.set(i, 0, unencryptedBytes[i]);
         }
-        SimpleMatrix vec = new SimpleMatrix(intermediate);
-        SimpleMatrix encryptedVec = encryptMat.mult(vec);
+        IGrowArray workA = new IGrowArray(encryptMat.numRows);
+        DGrowArray workB = new DGrowArray(encryptMat.numRows);
+        DMatrixSparseCSC encryptedVec = new DMatrixSparseCSC(dimension, 1, dimension);
+        CommonOps_DSCC.mult(encryptMat, vec, encryptedVec, workA, workB);
+        //encryptedVec.print();
         return encryptedVec;
     }
 
-    public static SimpleMatrix gen_permut_mat(int dimension, boolean inverse) {
+    public static DMatrixSparseCSC gen_permut_mat(int dimension, boolean inverse) {
         System.out.println(encrypt_key_val);
         int num_matrices = 1;
         if(2*dimension > 16) {
@@ -113,7 +130,6 @@ public class PermutMatrixTest {
         for(int i = 0; i < num_matrices; i++) {
             String logBaseStr = "" + i + dimension;
             double logBase = Double.parseDouble(logBaseStr);
-            System.out.println(logBase);
             String logStr = genLogBaseStr(logBase);
             nums.add(logStr);
         }
@@ -121,12 +137,13 @@ public class PermutMatrixTest {
         for(String str: nums) {
             strTotal.append(str);
         }
-        System.out.println(strTotal);
+        //System.out.println(strTotal);
 
         //build permutation matrix
         ArrayList<Integer> rows = new ArrayList<Integer>();
         ArrayList<Integer> cols = new ArrayList<Integer>();
         double[][] permut_array = new double[dimension][dimension];
+        DMatrixSparseCSC permut_matrix = new DMatrixSparseCSC(dimension, dimension, dimension);
         for(int i = 0; i < dimension; rows.add(i), cols.add(i), i++);
 
         for(int i = 0; i < 2*dimension; i++) {
@@ -137,16 +154,20 @@ public class PermutMatrixTest {
             int column = Character.getNumericValue(strTotal.charAt(i));
             column = column % cols.size();
             int columnIndex = cols.remove(column);
-            permut_array[rowIndex][columnIndex] = 1;
-            System.out.println(rows);
-            System.out.println(cols);
+            permut_matrix.set(rowIndex, columnIndex, 1);
+            //System.out.println(rows);
+            //System.out.println(cols);
         }
-        SimpleMatrix permut_mat = new SimpleMatrix(permut_array);
-        permut_mat.print();
+        //SimpleMatrix permut_mat = new SimpleMatrix(permut_array);
+        //permut_mat.print();
         if(inverse) {
-            return permut_mat.transpose();
+            //memory for the matrix operation
+            IGrowArray workA = new IGrowArray(permut_matrix.numRows);
+            DMatrixSparseCSC mat_transpose = new DMatrixSparseCSC(dimension, dimension, dimension);
+            CommonOps_DSCC.transpose(permut_matrix, mat_transpose, workA);
+            return mat_transpose;
         } else {
-            return permut_mat;
+            return permut_matrix;
         }
     }
 
@@ -155,7 +176,7 @@ public class PermutMatrixTest {
         String sum_str = sum_log + "";
         sum_str = sum_str.replaceAll("[.]", "");
         sum_str = extend(sum_str);
-        System.out.println(sum_str);
+        //System.out.println(sum_str);
         return sum_str;
     }
 
