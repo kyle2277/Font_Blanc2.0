@@ -53,7 +53,7 @@ public class Cipher {
     Facilitates the matrix transformation using n-dimensional permutation matrix
     Writes resulting vector of bytes to file
     */
-    public void permutCipher(int dimension, FileInputStream en_in, FileOutputStream en_out) throws IOException {
+    public void permutCipher(int dimension, FileInputStream in, FileOutputStream out) throws IOException {
         DMatrixSparseTriplet permutMat;
         if(permut_map.containsKey(dimension)) {
             permutMat = permut_map.get(dimension);
@@ -62,16 +62,16 @@ public class Cipher {
             permutMat = gen_permut_mat(Math.abs(dimension), inverse);
             permut_map.put(dimension, permutMat);
         }
+        //dimension no longer needs to be negative to signify inverse operation
         dimension = Math.abs(dimension);
         byte[] fileBytes = new byte[dimension];
-        en_in.read(fileBytes, 0, dimension);
+        in.read(fileBytes, 0, dimension);
         //System.out.println(Arrays.toString(unencryptedBytes));
         DMatrixSparseCSC resultantVec = transformVec(dimension, fileBytes, permutMat);
         for(int i = 0; i < dimension; i++) {
-            double write_dbl = resultantVec.get(i, 0);
-            byte write_byte = (byte) ((Math.round(write_dbl)) & 0xff);
+            byte write_byte = (byte) ((Math.round(resultantVec.get(i, 0))) & 0xff);
             //System.out.println(write_byte);
-            en_out.write(write_byte);
+            out.write(write_byte);
         }
         bytes_remaining -= dimension;
     }
@@ -114,9 +114,11 @@ public class Cipher {
     public String extend(String numStr) {
         int length = numStr.length();
         if (length < 16) {
+            StringBuilder str = new StringBuilder(numStr);
             for (int i = 0; i < (16 - length); i++) {
-                numStr = numStr.concat("0");
+                str.append("0");
             }
+            numStr = str.toString();
         }
         return numStr;
     }

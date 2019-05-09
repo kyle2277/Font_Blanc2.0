@@ -11,6 +11,7 @@ public class FontBlanc2Main {
     public static final String encrypt_extension = ".txt";
 
     public static void main(String[] args) throws IOException {
+        long startTime = System.currentTimeMillis();
         splitPath(args[0]);
         String encrypt_key = args[1];
         long fileLength = check_file(file_path + file_name);
@@ -38,6 +39,8 @@ public class FontBlanc2Main {
             if (in != null) { in.close(); }
             if (out != null) { out.close(); }
         }
+        long endTime = System.currentTimeMillis();
+        System.out.println("Program execution time: " + (endTime - startTime));
     }
 
     /*
@@ -49,9 +52,9 @@ public class FontBlanc2Main {
         if(split.length > 1) {
             file_path = "";
             //set global file path var
-            for(String str: split) {
+            for(int i = 0; i < split.length - 1; i++) {
                 path.append("/");
-                path.append(str);
+                path.append(split[i]);
             }
             path.append("/");
         } else {
