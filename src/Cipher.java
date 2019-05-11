@@ -40,10 +40,17 @@ public class Cipher {
     Breaks the file into chunks to be separately encrypted/decrypted
     */
     public void distributor(FileInputStream in, FileOutputStream out, int coeff) throws IOException {
-        //String encryptMap = genLogBaseStr(Math.exp(1));
-        //permutEncrypt(Character.getNumericValue(encryptMap.charAt(0)));
+        String encryptMap = genLogBaseStr(Math.exp(1));
+
+        int encryptMapLen = encryptMap.length();
+        int mapItr = 0;
         while(bytes_remaining >= 1024) {
-            permutCipher(coeff*1024, in, out);
+            if(mapItr == encryptMapLen) {
+                mapItr = 0;
+            }
+            int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr)) + 1;
+            permutCipher(coeff*(1024/permutDimension), in, out);
+            mapItr++;
         }
         permutCipher(coeff*(int) bytes_remaining, in, out);
     }
@@ -127,7 +134,7 @@ public class Cipher {
     Generates unique n-dimensional permutation matrices from the encryption key
     */
     public DMatrixSparseCSC gen_permut_mat(int dimension, boolean inverse) {
-        System.out.println(encrypt_key_val);
+        //System.out.println(encrypt_key_val);
         int num_matrices = 1;
         if(2*dimension > 16) {
             num_matrices = (((2*dimension) - ((2*dimension)%16))/16) + 1;
