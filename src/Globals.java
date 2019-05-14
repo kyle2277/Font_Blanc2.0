@@ -10,7 +10,6 @@ public class Globals {
 
     public Globals(String filePath, String cwd) {
         log_path = cwd + "/" + log_name;
-        System.out.println(log_path);
         splitPath(filePath);
     }
 
