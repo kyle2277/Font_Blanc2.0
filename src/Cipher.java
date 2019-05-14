@@ -2,7 +2,6 @@ import java.io.*;
 import java.util.*;
 
 import org.ejml.data.*;
-import org.ejml.ops.ConvertDMatrixStruct;
 import org.ejml.sparse.csc.CommonOps_DSCC;
 
 /*
@@ -14,7 +13,7 @@ public class Cipher {
     private static int encrypt_key_val;
     public static long bytes_processed;
     public static long bytes_remaining;
-    private static HashMap<Integer, DMatrixSparseTriplet> permut_map;
+    private static HashMap<Integer, DMatrixSparseCSC> permut_map;
 
     public Cipher(String encryptKey, long fileLength) {
         encrypt_key = encryptKey;
@@ -40,10 +39,17 @@ public class Cipher {
     Breaks the file into chunks to be separately encrypted/decrypted
     */
     public void distributor(FileInputStream in, FileOutputStream out, int coeff) throws IOException {
-        //String encryptMap = genLogBaseStr(Math.exp(1));
-        //permutEncrypt(Character.getNumericValue(encryptMap.charAt(0)));
+        String encryptMap = genLogBaseStr(Math.exp(1));
+
+        int encryptMapLen = encryptMap.length();
+        int mapItr = 0;
         while(bytes_remaining >= 1024) {
-            permutCipher(coeff*1024, in, out);
+            if(mapItr == encryptMapLen) {
+                mapItr = 0;
+            }
+            int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr)) + 1;
+            permutCipher(coeff*(1024/permutDimension), in, out);
+            mapItr++;
         }
         permutCipher(coeff*(int) bytes_remaining, in, out);
     }
@@ -54,7 +60,7 @@ public class Cipher {
     Writes resulting vector of bytes to file
     */
     public void permutCipher(int dimension, FileInputStream in, FileOutputStream out) throws IOException {
-        DMatrixSparseTriplet permutMat;
+        DMatrixSparseCSC permutMat;
         if(permut_map.containsKey(dimension)) {
             permutMat = permut_map.get(dimension);
         } else {
@@ -80,18 +86,17 @@ public class Cipher {
     Takes the matrix dimension, a list of bytes from the file and relevant permutation matrix
     Performs the linear transformation operation on the byte vector and returns the resulting vector
     */
-    public DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseTriplet permutMat) {
+    public DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseCSC permutMat) {
         DMatrixSparseCSC vec = new DMatrixSparseCSC(dimension, 1, dimension);
         for(int i = 0; i < dimension; i++) {
             vec.set(i, 0, fileBytes[i]);
         }
         //convert to CSC matrix
-        DMatrixSparseCSC transformMat_CSC = ConvertDMatrixStruct.convert(permutMat, (DMatrixSparseCSC)null);
         //allocate memory for the matrix operation
-        IGrowArray workA = new IGrowArray(transformMat_CSC.numRows);
-        DGrowArray workB = new DGrowArray(transformMat_CSC.numRows);
+        IGrowArray workA = new IGrowArray(permutMat.numRows);
+        DGrowArray workB = new DGrowArray(permutMat.numRows);
         DMatrixSparseCSC resultantVec = new DMatrixSparseCSC(dimension, 1, dimension);
-        CommonOps_DSCC.mult(transformMat_CSC, vec, resultantVec, workA, workB);
+        CommonOps_DSCC.mult(permutMat, vec, resultantVec, workA, workB);
         //encryptedVec.print();
         return resultantVec;
     }
@@ -127,8 +132,8 @@ public class Cipher {
     Takes the dimension of the matrix to create and whether to invert it
     Generates unique n-dimensional permutation matrices from the encryption key
     */
-    public DMatrixSparseTriplet gen_permut_mat(int dimension, boolean inverse) {
-        System.out.println(encrypt_key_val);
+    public DMatrixSparseCSC gen_permut_mat(int dimension, boolean inverse) {
+        //System.out.println(encrypt_key_val);
         int num_matrices = 1;
         if(2*dimension > 16) {
             num_matrices = (((2*dimension) - ((2*dimension)%16))/16) + 1;
@@ -148,7 +153,7 @@ public class Cipher {
         //build permutation matrix
         ArrayList<Integer> rows = new ArrayList<Integer>();
         ArrayList<Integer> cols = new ArrayList<Integer>();
-        DMatrixSparseTriplet permut_matrix = new DMatrixSparseTriplet(dimension, dimension, dimension);
+        DMatrixSparseCSC permut_matrix = new DMatrixSparseCSC(dimension, dimension, dimension);
         for(int i = 0; i < dimension; rows.add(i), cols.add(i), i++);
 
         for(int i = 0; i < 2*dimension; i++) {
@@ -159,18 +164,16 @@ public class Cipher {
             int column = Character.getNumericValue(strTotal.charAt(i));
             column = column % cols.size();
             int columnIndex = cols.remove(column);
-            permut_matrix.addItem(rowIndex, columnIndex, 1);
+            permut_matrix.set(rowIndex, columnIndex, 1);
             //System.out.println(rows);
             //System.out.println(cols);
         }
         if(inverse) {
             //convert to CSC matrix
-            DMatrixSparseCSC mat_CSC = ConvertDMatrixStruct.convert(permut_matrix, (DMatrixSparseCSC)null);
             //allocate memory for the matrix operation
-            IGrowArray workA = new IGrowArray(mat_CSC.numRows);
+            IGrowArray workA = new IGrowArray(permut_matrix.numRows);
             DMatrixSparseCSC mat_transpose_CSC = new DMatrixSparseCSC(dimension, dimension, dimension);
-            CommonOps_DSCC.transpose(mat_CSC, mat_transpose_CSC, workA);
-            return ConvertDMatrixStruct.convert(mat_transpose_CSC, (DMatrixSparseTriplet)null);
+            return CommonOps_DSCC.transpose(permut_matrix, mat_transpose_CSC, workA);
         } else {
             return permut_matrix;
         }
