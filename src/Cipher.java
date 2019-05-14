@@ -2,7 +2,6 @@ import java.io.*;
 import java.util.*;
 
 import org.ejml.data.*;
-import org.ejml.ops.ConvertDMatrixStruct;
 import org.ejml.sparse.csc.CommonOps_DSCC;
 
 /*
