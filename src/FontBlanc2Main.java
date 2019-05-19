@@ -7,7 +7,6 @@ public class FontBlanc2Main {
     public static String file_name;
     public static final String log_path = "./log.txt";
     public static final String encrypt_tag = "encrypted_";
-    public static final String decrypt_tag = "decrypted_";
     public static final String encrypt_extension = ".txt";
 
     public static void main(String[] args) throws IOException {
@@ -27,7 +26,7 @@ public class FontBlanc2Main {
                 c.distributor(in, out, encryptCoeff);
             } else if(EorD.equalsIgnoreCase("decrypt")) {
                 in = new FileInputStream(encrypt_tag + file_name + encrypt_extension);
-                out = new FileOutputStream(decrypt_tag + file_name);
+                out = new FileOutputStream(file_name);
                 int decryptCoeff = -1;
                 c.distributor(in, out, decryptCoeff);
             } else {
