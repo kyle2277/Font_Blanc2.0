@@ -24,7 +24,7 @@ public class FontBlanc2Main {
                 coeff = 1;
             } else if(EorD.equalsIgnoreCase("decrypt")) {
                 in = new FileInputStream(encrypt_tag + file_name + encrypt_extension);
-                out = new FileOutputStream(decrypt_tag + file_name);
+                out = new FileOutputStream(file_name);
                 coeff = -1;
             } else {
                 return fatal("Invalid action");
