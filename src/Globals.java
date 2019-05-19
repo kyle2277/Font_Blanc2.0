@@ -5,7 +5,6 @@ public class Globals {
     public String log_path;
     public final String log_name = "../JNI/Font_Blanc2.0/log.txt";
     public final String encrypt_tag = "encrypted_";
-    public final String decrypt_tag = "decrypted_";
     public final String encrypt_extension = ".txt";
 
     public Globals(String filePath, String cwd) {

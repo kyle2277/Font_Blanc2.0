@@ -21,7 +21,7 @@ public class FontBlanc2Main {
                 coeff = 1;
             } else { //EorD = "decrypt"
                 in = new FileInputStream(g.file_path + g.encrypt_tag + g.file_name + g.encrypt_extension);
-                out = new FileOutputStream(g.file_path + g.decrypt_tag + g.file_name);
+                out = new FileOutputStream(g.file_path + g.file_name);
                 coeff = -1;
             }
             c.distributor(in, out, coeff);
