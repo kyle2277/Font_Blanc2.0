@@ -1,1 +1,7 @@
-# Font_Blanc2.0
+# Font Blanc 2.0
+___
+## Overview
+Welcome to the new and improved Font Blanc data encryption algorithm, rebuilt from the ground up!
+Font Blanc 2.0 (FB2) no longer relies on the archaic Hill Cypher matrix encryption technology utilized by Arkadiusz2.0. FB2 uses __variable-dimension permutation matrix transformations__ which reorder byte data in a manner unique to the encryption key.
+## Documentation
+Coming soon!
