@@ -1,38 +1,44 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Timestamp;
+
 public class Globals {
 
-    public String file_path;
-    public String file_name;
-    public String log_path;
-    public final String log_name = "../JNI/Font_Blanc2.0/log.txt";
-    public final String encrypt_tag = "encrypted_";
-    public final String encrypt_extension = ".txt";
+    public String encryptTag;
+    public String decryptTag;
+    public String encryptExt;
+    public String logPath;
 
-    public Globals(String filePath, String cwd) {
-        log_path = cwd + "/" + log_name;
-        splitPath(filePath);
+    public Globals(String encryptTag, String decryptTag, String encryptExt, String logPath) {
+        this.encryptTag = encryptTag;
+        this.decryptTag = decryptTag;
+        this.encryptExt = encryptExt;
+        this.logPath = logPath;
     }
 
     /*
-    Splits the input file path into two components: path to the file name and the file name itself
+    Triggered if a fatal error occurs. Writes the error to the console and log file
+    before program termination
     */
-    public void splitPath(String file_input) {
-        String[] split = file_input.split("/", 0);
-        int splitLen = split.length;
-        StringBuilder path = new StringBuilder();
-        file_path = "";
-        if(splitLen > 1) {
-            //set global file path var
-            for(int i = 0; i < splitLen - 1; i++) {
-                path.append(split[i]);
-                path.append("/");
-            }
-            //path.append("/");
-        } else {
-            path.append("./");
+    public void fatal(String message) {
+        try {
+            File fatal = new File(logPath);
+            FileWriter out = new FileWriter(fatal, true);
+            Timestamp time = new Timestamp(System.currentTimeMillis());
+            out.write(time + "\n");
+            out.write("Fatal error:\n");
+            out.write(message + "\n\n");
+            out.flush();
+            out.close();
+        } catch(IOException e) {
+            System.out.println("No log file found.");
+        } finally {
+            System.out.println("Fatal error:");
+            System.out.println(message);
+            System.out.println("Aborting.");
         }
-        file_path = path.toString();
-        //File name var
-        file_name = split[splitLen - 1];
+        System.exit(1);
     }
 
 }

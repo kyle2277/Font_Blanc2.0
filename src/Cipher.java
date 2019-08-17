@@ -9,19 +9,67 @@ The Font_Blanc2.0 core encryption/decryption device
 */
 public class Cipher {
 
-    private static String encrypt_key;
-    private static int encrypt_key_val;
-    public static long bytes_processed;
-    public static long bytes_remaining;
-    private static HashMap<Integer, DMatrixSparseCSC> permut_map;
+    public String justPath;
+    public String fileName;
+    private String encrypt_key;
+    private int encrypt_key_val;
+    public long bytes_processed;
+    public long bytes_remaining;
+    private HashMap<Integer, DMatrixSparseCSC> permut_map;
 
-    public Cipher(String encryptKey, long fileLength) {
+    public Cipher(Globals g, String filePath, String encryptKey, boolean encrypt) {
         encrypt_key = encryptKey;
         System.out.println("Encrypt key: " + encrypt_key);
         encrypt_key_val = getEncryptKeyVal();
+        splitPath(filePath);
         bytes_processed = 0;
-        bytes_remaining = fileLength;
+        bytes_remaining = fileLength(g, encrypt);
         permut_map = new HashMap<>();
+    }
+
+    /*
+    Splits the input file path into two components: path to the file name and the file name itself
+    */
+    public void splitPath(String filePath) {
+        String[] split = filePath.split("/", 0);
+        int splitLen = split.length;
+        StringBuilder path = new StringBuilder();
+        justPath = "";
+        if(splitLen > 1) {
+            //set global file path var
+            for(int i = 0; i < splitLen - 1; i++) {
+                path.append(split[i]);
+                path.append("/");
+            }
+            //path.append("/");
+        } else {
+            path.append("./");
+        }
+        justPath = path.toString();
+        //File name var
+        fileName = split[splitLen - 1];
+    }
+
+    /*
+    Takes the path of the input file
+    Checks if the input file exists and returns the length of the file in bytes
+     */
+    public long fileLength(Globals g, boolean encrypt) {
+        File f;
+        String fullPath;
+        if(encrypt) {
+            fullPath = justPath + fileName;
+            f = new File(fullPath);
+        } else { //EorD = "decrypt"
+            fullPath = justPath + g.encryptTag + fileName + g.encryptExt;
+            f = new File(fullPath);
+        }
+        if(f.exists()) {
+            return f.length();
+        } else {
+            g.fatal("File " + fileName + " does not exist");
+            return 0;
+        }
     }
 
     public int getEncryptKeyVal() {
@@ -140,9 +188,8 @@ public class Cipher {
         }
         Queue<String> nums = new LinkedList<String>();
         for(int i = 0; i < num_matrices; i++) {
-            String logBaseStr = "" + i + dimension;
-            double logBase = Double.parseDouble(logBaseStr);
-            String logStr = genLogBaseStr(logBase);
+            int logBaseStr = i + dimension;
+            String logStr = genLogBaseStr((double) logBaseStr);
             nums.add(logStr);
         }
         StringBuilder strTotal = new StringBuilder();
@@ -154,6 +201,8 @@ public class Cipher {
         ArrayList<Integer> rows = new ArrayList<Integer>();
         ArrayList<Integer> cols = new ArrayList<Integer>();
         DMatrixSparseCSC permut_matrix = new DMatrixSparseCSC(dimension, dimension, dimension);
+        //expensive computation
+        //creating array to build permutation matrix
         for(int i = 0; i < dimension; rows.add(i), cols.add(i), i++);
 
         for(int i = 0; i < 2*dimension; i++) {
