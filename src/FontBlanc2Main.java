@@ -20,28 +20,8 @@ public class FontBlanc2Main {
             g.fatal("Invalid action.");
         }
         Cipher c = new Cipher(g, filePath, encryptKey, encrypt);
-
-        FileInputStream in = null;
-        FileOutputStream out = null;
-        int coeff = 0;
-        try {
-            if(EorD.equalsIgnoreCase("encrypt")) {
-                in = new FileInputStream(c.justPath + c.fileName);
-                out = new FileOutputStream(c.justPath + g.encryptTag + c.fileName + g.encryptExt);
-                coeff = 1;
-            } else { //EorD = "decrypt"
-                in = new FileInputStream(c.justPath + g.encryptTag + c.fileName + g.encryptExt);
-                out = new FileOutputStream(c.justPath + g.decryptTag + c.fileName);
-                coeff = -1;
-            }
-            c.distributor(in, out, coeff);
-        } catch(IOException e) {
-            g.fatal("Output path not found.");
-        } finally {
-            if (in != null) { in.close(); }
-            if (out != null) { out.close(); }
-        }
+        c.distributor(g, encrypt);
         long endTime = System.currentTimeMillis();
-        System.out.println("Program execution time: " + (endTime - startTime));
+        System.out.println("Program execution time: " + ((double)endTime - (double)startTime)/1000 + "s");
     }
 }

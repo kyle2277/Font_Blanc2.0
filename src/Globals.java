@@ -29,7 +29,6 @@ public class Globals {
             out.write(time + "\n");
             out.write("Fatal error:\n");
             out.write(message + "\n\n");
-            out.flush();
             out.close();
         } catch(IOException e) {
             System.out.println("No log file found.");
