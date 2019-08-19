@@ -8,6 +8,7 @@ public class FontBlanc2Main {
     public static final String decrypt_tag = "d_";
     public static final String encrypt_extension = ".txt";
 
+    //merged
     // takes path to the file, encryption key, encrypt or decrypt
     public static void main(String[] args) throws IOException {
         Globals g = new Globals(encrypt_tag, decrypt_tag, encrypt_extension, log_path);
