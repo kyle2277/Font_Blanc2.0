@@ -9,7 +9,7 @@ import org.ejml.sparse.csc.CommonOps_DSCC;
 /*
 The Font_Blanc2.0 core encryption/decryption device
 */
-public class Cipher {
+public class Cipher extends Thread{
 
     private String justPath;
     private String fileName;
@@ -18,9 +18,13 @@ public class Cipher {
     private int encrypt_key_val;
     public long bytes_processed;
     public long bytes_remaining;
+    private boolean encrypt;
+    private Globals g;
     private HashMap<Integer, DMatrixSparseCSC> permut_map;
 
     public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey, boolean encrypt) {
+        this.g = g;
+        this.encrypt = encrypt;
         encrypt_key = encryptKey;
         justPath = fileInPath;
         this.fileName = fileName;
@@ -34,6 +38,16 @@ public class Cipher {
         bytes_processed = 0;
         bytes_remaining = fileLength(g, encrypt);
         permut_map = new HashMap<>();
+    }
+
+    @Override
+    public void run() {
+        try {
+            distributor();
+        } catch (Exception e) {
+            System.out.println("Exception.");
+            System.exit(1);
+        }
     }
 
     /*
@@ -71,7 +85,7 @@ public class Cipher {
     inverted permutation matrix
     Breaks the file into chunks to be separately encrypted/decrypted
     */
-    public void distributor(Globals g, boolean encrypt) throws IOException {
+    public void distributor() throws IOException {
         FileInputStream in = null;
         FileOutputStream out = null;
         int coeff = 0;

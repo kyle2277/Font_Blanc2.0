@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
+import main.encryption_engine.*;
 
 public class Font_Blanc2_App {
     private JButton openFileButton;
@@ -29,10 +30,14 @@ public class Font_Blanc2_App {
     private JRadioButton encryptRadioButton;
     private JRadioButton decryptRadioButton;
     private JButton openFileSimple;
+    private JProgressBar progressBar;
+    private JLabel progressLabel;
+    private JButton settingsButton;
     private JFileChooser fc;
     private JFileChooser dc; //directory chooser
     private HashMap<String, FilePreferences> fileMap;
     private FilePreferences curFile;
+    private Globals g;
 
     public Font_Blanc2_App() {
 
@@ -115,6 +120,7 @@ public class Font_Blanc2_App {
          */
 
         curFile = null;
+        g = new Globals("e_", "d_", ".txt", new File(".").getAbsolutePath());
 
         //files drag and dropped
         new FileDrop(DnD_area, new FileDrop.Listener() {
@@ -233,7 +239,16 @@ public class Font_Blanc2_App {
                 if(curFile != null) {
                     char[] encryptKey = keyField.getPassword();
                     curFile.setEncryptKey(encryptKey);
+                    setStatus();
                 }
+            }
+        });
+
+        //set global variables
+        settingsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                //todo open options window
             }
         });
     }
@@ -331,10 +346,14 @@ public class Font_Blanc2_App {
         if(curFile != null) {
             StringBuilder s = new StringBuilder();
             s.append(curFile.getFileName());
-            s.append("\n");
+            s.append("\nIn: ");
+            s.append(curFile.getInPath());
+            s.append("\nOut: ");
             s.append(curFile.getOutPath());
-            s.append("\n");
+            s.append("\nEncrypt: ");
             s.append(curFile.isEncrypt());
+            s.append("\nKey: ");
+            s.append(Arrays.toString(curFile.getEncryptKey()));
             String status = s.toString();
             statusArea.setText(status);
         } else {
