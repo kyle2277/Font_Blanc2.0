@@ -10,10 +10,9 @@ public class FilePreferences {
     private boolean encrypt;
 
     public FilePreferences(String filePath, boolean encrypt) {
-        inPath = filePath;
-        outPath = null;
         this.encrypt = encrypt;
         splitPath(filePath);
+        outPath = inPath;
     }
 
     /*
@@ -39,15 +38,39 @@ public class FilePreferences {
         fileName = split[splitLen - 1];
     }
 
-    private void setOutPath(String outPath) {
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getInPath() {
+        return inPath;
+    }
+
+    public String getOutPath() {
+        return outPath;
+    }
+
+    public char[] getEncryptKey() {
+        return encryptKey;
+    }
+
+    public boolean isEncrypt() {
+        return encrypt;
+    }
+
+    public void setOutPath(String outPath) {
         this.outPath = outPath;
     }
 
-    private void setEncryptKey(char[] encryptKey) {
+    public void setEncryptKey(char[] encryptKey) {
         this.encryptKey = encryptKey;
     }
 
-    private static void clean(FilePreferences fp) {
+    public void setEncrypt(boolean encrypt) {
+        this.encrypt = encrypt;
+    }
+
+    public static void clean(FilePreferences fp) {
         Arrays.fill(fp.encryptKey, '0');
     }
 }
