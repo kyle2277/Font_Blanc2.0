@@ -21,7 +21,7 @@ public class FontBlanc2Main {
         if(!encrypt && !EorD.equalsIgnoreCase("decrypt")) {
             g.fatal("Invalid action.");
         }
-        Cipher c = new Cipher(g, filePath, encryptKey, encrypt);
+        Cipher c = new Cipher(g, null, null, filePath, null, encrypt);
         c.distributor(g, encrypt);
         long endTime = System.currentTimeMillis();
         System.out.println("Program execution time: " + ((double)endTime - (double)startTime)/1000 + "s");

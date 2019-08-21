@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="main.swing_gui.Font_Blanc2_App">
-  <grid id="27dc6" binding="panelMain" layout-manager="GridLayoutManager" row-count="5" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="panelMain" layout-manager="GridLayoutManager" row-count="12" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="500" height="400"/>
+      <xy x="20" y="20" width="809" height="658"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
-      <component id="b05e2" class="javax.swing.JButton" binding="openFileButton" default-binding="true">
+      <component id="a0a5d" class="javax.swing.JButton" binding="advancedReset">
         <constraints>
-          <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="11" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Open file"/>
+          <text value="Reset"/>
         </properties>
       </component>
       <component id="c0a74" class="javax.swing.JTextArea" binding="DnD_area">
         <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="50"/>
+          <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="175"/>
           </grid>
         </constraints>
         <properties>
@@ -27,39 +27,138 @@
           <text value="Drag and drop files here"/>
         </properties>
       </component>
-      <component id="a07a4" class="javax.swing.JTextArea" binding="statusArea">
+      <component id="15e5f" class="javax.swing.JList" binding="fileList">
         <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+          <grid row="6" column="0" row-span="5" col-span="2" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="50"/>
           </grid>
         </constraints>
         <properties>
-          <editable value="false"/>
+          <model/>
+        </properties>
+      </component>
+      <component id="b05e2" class="javax.swing.JButton" binding="openFileButton" default-binding="true">
+        <constraints>
+          <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Open File"/>
+        </properties>
+      </component>
+      <component id="27895" class="javax.swing.JButton" binding="removeSelectedButton" default-binding="true">
+        <constraints>
+          <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Remove Selected"/>
+        </properties>
+      </component>
+      <component id="aaab5" class="javax.swing.JButton" binding="preferencesButton" default-binding="true">
+        <constraints>
+          <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Preferences"/>
+        </properties>
+      </component>
+      <component id="dad85" class="javax.swing.JCheckBox" binding="advancedCheckBox">
+        <constraints>
+          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <preferred-size width="128" height="175"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="Show advanced"/>
+        </properties>
+      </component>
+      <component id="d6d67" class="javax.swing.JButton" binding="copyPrefsButton">
+        <constraints>
+          <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Copy Preferences to All"/>
+        </properties>
+      </component>
+      <component id="18950" class="javax.swing.JTextField" binding="outputField">
+        <constraints>
+          <grid row="2" column="1" row-span="2" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
           <text value=""/>
         </properties>
       </component>
-      <component id="a0a5d" class="javax.swing.JButton" binding="resetButton" default-binding="true">
+      <component id="ec1db" class="javax.swing.JCheckBox" binding="outputCheckbox">
         <constraints>
-          <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Reset"/>
+          <text value="Output Same as Source"/>
         </properties>
       </component>
-      <component id="15e5f" class="javax.swing.JList" binding="fileList">
+      <component id="bcb0" class="javax.swing.JLabel" binding="outputLabel">
         <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="2" anchor="0" fill="3" indent="0" use-parent-layout="false">
+          <grid row="2" column="0" row-span="2" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="File Output"/>
+        </properties>
+      </component>
+      <component id="84f8b" class="javax.swing.JLabel" binding="keyLabel">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Encrypt Key"/>
+        </properties>
+      </component>
+      <component id="ab9c5" class="javax.swing.JPasswordField" binding="keyField">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="35418" class="javax.swing.JTextArea" binding="statusArea">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="50"/>
           </grid>
         </constraints>
         <properties/>
       </component>
-      <component id="27895" class="javax.swing.JButton" binding="removeSelectedButton" default-binding="true">
+      <component id="7a146" class="javax.swing.JButton" binding="simpleGO">
         <constraints>
-          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Remove Selected"/>
+          <text value="GO"/>
+        </properties>
+      </component>
+      <component id="64480" class="javax.swing.JButton" binding="advancedGO">
+        <constraints>
+          <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="GO"/>
+        </properties>
+      </component>
+      <component id="cdb10" class="javax.swing.JButton" binding="setOutputButton" default-binding="true">
+        <constraints>
+          <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Set Output"/>
+        </properties>
+      </component>
+      <component id="ed403" class="javax.swing.JButton" binding="simpleReset">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Reset"/>
         </properties>
       </component>
     </children>

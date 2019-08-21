@@ -13,43 +13,27 @@ public class Cipher {
 
     private String justPath;
     private String fileName;
-    private String encrypt_key;
+    private String fileOutPath;
+    private char[] encrypt_key;
     private int encrypt_key_val;
     public long bytes_processed;
     public long bytes_remaining;
     private HashMap<Integer, DMatrixSparseCSC> permut_map;
 
-    public Cipher(Globals g, String filePath, String encryptKey, boolean encrypt) {
+    public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey, boolean encrypt) {
         encrypt_key = encryptKey;
-        System.out.println("Encrypt key: " + encrypt_key);
+        justPath = fileInPath;
+        this.fileName = fileName;
+        if(fileOutPath != null) {
+            this.fileOutPath = fileOutPath;
+        } else {
+            this.fileOutPath = fileInPath;
+        }
+        System.out.println("Encrypt key: " + Arrays.toString(encrypt_key));
         encrypt_key_val = getEncryptKeyVal();
-        splitPath(filePath);
         bytes_processed = 0;
         bytes_remaining = fileLength(g, encrypt);
         permut_map = new HashMap<>();
-    }
-
-    /*
-    Splits the input file path into two components: path to the file name and the file name itself
-    */
-    private void splitPath(String filePath) {
-        String[] split = filePath.split("/", 0);
-        int splitLen = split.length;
-        StringBuilder path = new StringBuilder();
-        justPath = "";
-        if(splitLen > 1) {
-            //set global file path var
-            for(int i = 0; i < splitLen - 1; i++) {
-                path.append(split[i]);
-                path.append("/");
-            }
-            //path.append("/");
-        } else {
-            path.append("./");
-        }
-        justPath = path.toString();
-        //File name var
-        fileName = split[splitLen - 1];
     }
 
     /*
@@ -76,8 +60,7 @@ public class Cipher {
 
     private int getEncryptKeyVal() {
         int sum = 0;
-        char[] chars = encrypt_key.toCharArray();
-        for(char ch: chars) {
+        for(char ch: encrypt_key) {
             sum += ch;
         }
         return sum;
