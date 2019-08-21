@@ -16,6 +16,7 @@ public class Cipher extends Thread{
     private String fileOutPath;
     private char[] encrypt_key;
     private int encrypt_key_val;
+    public long fileLength;
     public long bytes_processed;
     public long bytes_remaining;
     private boolean encrypt;
@@ -36,7 +37,8 @@ public class Cipher extends Thread{
         System.out.println("Encrypt key: " + Arrays.toString(encrypt_key));
         encrypt_key_val = getEncryptKeyVal();
         bytes_processed = 0;
-        bytes_remaining = fileLength(g, encrypt);
+        fileLength = fileLength(g, encrypt);
+        bytes_remaining = fileLength;
         permut_map = new HashMap<>();
     }
 
@@ -145,6 +147,7 @@ public class Cipher extends Thread{
             //System.out.println(write_byte);
             out.write(write_byte);
         }
+        bytes_processed += dimension;
         bytes_remaining -= dimension;
     }
 

@@ -38,6 +38,7 @@ public class Font_Blanc2_App {
     private HashMap<String, FilePreferences> fileMap;
     private FilePreferences curFile;
     private Globals g;
+    private boolean running;
 
     public Font_Blanc2_App() {
 
@@ -121,6 +122,7 @@ public class Font_Blanc2_App {
 
         curFile = null;
         g = new Globals("e_", "d_", ".txt", new File(".").getAbsolutePath());
+        running = false;
 
         //files drag and dropped
         new FileDrop(DnD_area, new FileDrop.Listener() {
@@ -249,6 +251,28 @@ public class Font_Blanc2_App {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 //todo open options window
+                //if options are changed to empty strings do not update fields in g
+            }
+        });
+
+        //initiate encryption/decryption process
+        simpleGO.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                //check curFile has no null fields
+                if(!isRunning()) {
+                    if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
+                            && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
+                        //create cipher
+                        Cipher c = new Cipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
+                                curFile.getEncryptKey(), curFile.isEncrypt());
+                        //run thread
+                        Progress p = new Progress(Font_Blanc2_App.this, c);
+                        p.start();
+                    } else {
+                        setStatus();
+                    }
+                }
             }
         });
     }
@@ -256,6 +280,26 @@ public class Font_Blanc2_App {
     /*
      ******************************************ADVANCED FUNCTIONS******************************************************
      */
+
+    //set progress bar level
+    public void setProgressBar(int val) {
+        progressBar.setValue(val);
+    }
+
+    //set progress bar label text
+    public void setProgressLabel(String s) {
+        progressLabel.setText(s);
+    }
+
+    //check if the encryption engine is currently running
+    public boolean isRunning() {
+        return running;
+    }
+
+    //set status of encryption engine as running or not running
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
 
     //reset the app home frame
     public void resetAdvanced() {
@@ -303,6 +347,8 @@ public class Font_Blanc2_App {
         cleanCurFile();
         setStatus();
         encryptRadioButton.setSelected(true);
+        progressBar.setValue(0);
+        progressLabel.setText("");
         keyField.setText("");
         outputField.setText("");
         outputCheckbox.setSelected(true);
