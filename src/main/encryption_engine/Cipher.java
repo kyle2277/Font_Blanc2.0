@@ -9,7 +9,7 @@ import org.ejml.sparse.csc.CommonOps_DSCC;
 /*
 The Font_Blanc2.0 core encryption/decryption device
 */
-public class Cipher extends Thread{
+public class Cipher {
 
     private String justPath;
     private String fileName;
@@ -42,16 +42,6 @@ public class Cipher extends Thread{
         permut_map = new HashMap<>();
     }
 
-    @Override
-    public void run() {
-        try {
-            distributor();
-        } catch (Exception e) {
-            System.out.println("Exception.");
-            System.exit(1);
-        }
-    }
-
     /*
     Takes the path of the input file
     Checks if the input file exists and returns the length of the file in bytes
@@ -82,116 +72,11 @@ public class Cipher extends Thread{
         return sum;
     }
 
-//    /*
-//    Takes objects for reading and writing to file and the coefficient which tells whether to fetch the normal or
-//    inverted permutation matrix
-//    Breaks the file into chunks to be separately encrypted/decrypted
-//    */
-//    public void distributor() throws IOException, InterruptedException {
-//        FileInputStream in = null;
-//        FileOutputStream out = null;
-//        int coeff = 0;
-//        try {
-//            if(encrypt) {
-//                in = new FileInputStream(justPath + fileName);
-//                out = new FileOutputStream(justPath + g.encryptTag + fileName + g.encryptExt);
-//                coeff = 1;
-//                System.out.println("Encrypting...");
-//            } else { //decrypt
-//                in = new FileInputStream(justPath + g.encryptTag + fileName + g.encryptExt);
-//                out = new FileOutputStream(justPath + g.decryptTag + fileName);
-//                coeff = -1;
-//                System.out.println("Decrypting...");
-//            }
-//            String encryptMap = genLogBaseStr(Math.exp(1));
-//            int encryptMapLen = encryptMap.length();
-//
-//            boolean end = false;
-//            int threadMax = 52;
-//            int mapItr = 0;
-//
-//            while(!end) {
-//                Queue<SinglePermutation> q = new LinkedList<>();
-//                for(int threadItr = 1; threadItr <= threadMax && !end; threadItr++) {
-//                    if (bytes_remaining >= 1024) {
-//                        if (mapItr == encryptMapLen) {
-//                            mapItr = 0;
-//                        }
-//                        //generate permutation dimension
-//                        int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr)) + 1;
-//                        int dimension = coeff * (1024 / permutDimension);
-//                        SinglePermutation cur = newPermutation(threadItr, dimension, in);
-//                        q.add(cur);
-//                        //System.out.println(cur.getId());
-//                        mapItr++;
-//                    } else {
-//                        //create permutCipher
-//                        //permutCipher.start();
-//                        SinglePermutation last = newPermutation(threadItr, (int) bytes_remaining, in);
-//                        q.add(last);
-//                        //System.out.println(last.getId());
-//                        end = true;
-//                    }
-//                }
-//                //write resulant vecs to file
-//                //System.out.println("Done with batch");
-//                SinglePermutation cur = q.poll();
-//                try {
-//                    //while there are still objects in the queue
-//                    while(cur != null) {
-//                        //while the object in question is still calculating the resultant vector
-//                        while(cur.getResMat() == null) {
-//                            Thread.sleep(10);
-//                        }
-//                        writeToFile(cur, out);
-//                        cur = q.poll();
-//                    }
-//                } catch (InterruptedException e) {
-//                    System.out.println("Interrupted thread");
-//                    System.exit(1);
-//                }
-//            }
-//        } catch(IOException e) {
-//            g.fatal("Output path not found.");
-//        } finally {
-//            if (in != null) { in.close(); }
-//            if (out != null) { out.close(); }
-//        }
-//    }
-//
-//    //create new thread to run object to run encryption process
-//    private SinglePermutation newPermutation(int id, int dimension, FileInputStream in) throws IOException{
-//        //read input bytes from file
-//        int absDimension = Math.abs(dimension);
-//        byte[] fileBytes = new byte[absDimension];
-//        in.read(fileBytes, 0, absDimension);
-//        //fetch permutation matrix
-//        DMatrixSparseCSC permutMat;
-//        if(permut_map.containsKey(dimension)) {
-//            permutMat = permut_map.get(dimension);
-//        } else {
-//            permutMat = gen_permut_mat((absDimension), (dimension < 0));
-//            permut_map.put(dimension, permutMat);
-//        }
-//        //create permutCipher
-//        SinglePermutation cur = new SinglePermutation(id, absDimension, fileBytes, permutMat);
-//        cur.start();
-//        return cur;
-//    }
-//
-//    //outputs byte data to a file
-//    private void writeToFile(SinglePermutation cur, FileOutputStream out) throws IOException {
-//        DMatrixSparseCSC bytes = cur.getResMat();
-//        int dimension = cur.getDimension();
-//        for(int i = 0; i < dimension; i++) {
-//            byte write_byte = (byte) ((Math.round(bytes.get(i, 0))) & 0xff);
-//            //System.out.println(write_byte);
-//            out.write(write_byte);
-//        }
-//        bytes_processed += dimension;
-//        bytes_remaining -= dimension;
-//    }
-
+    /*
+    Takes objects for reading and writing to file and the coefficient which tells whether to fetch the normal or
+    inverted permutation matrix
+    Breaks the file into chunks to be separately encrypted/decrypted
+    */
     public void distributor() throws IOException, InterruptedException {
         FileInputStream in = null;
         FileOutputStream out = null;
@@ -231,12 +116,11 @@ public class Cipher extends Thread{
     }
 
     /*
-    DEPRECATED
     Takes the matrix dimension and objects for reading and writing to file
     Facilitates the matrix transformation using n-dimensional permutation matrix
     Writes resulting vector of bytes to file
     */
-    private void permutCipher(int dimension, FileInputStream in, FileOutputStream out) throws IOException {
+    protected void permutCipher(int dimension, FileInputStream in, FileOutputStream out) throws IOException {
         DMatrixSparseCSC permutMat;
         if(permut_map.containsKey(dimension)) {
             permutMat = permut_map.get(dimension);
@@ -260,11 +144,10 @@ public class Cipher extends Thread{
     }
 
     /*
-    DEPRECATED
     Takes the matrix dimension, a list of bytes from the file and relevant permutation matrix
     Performs the linear transformation operation on the byte vector and returns the resulting vector
     */
-    private DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseCSC permutMat) {
+    protected DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseCSC permutMat) {
         DMatrixSparseCSC vec = new DMatrixSparseCSC(dimension, 1, dimension);
         for(int i = 0; i < dimension; i++) {
             vec.set(i, 0, fileBytes[i]);
@@ -282,7 +165,7 @@ public class Cipher extends Thread{
     /*
     Generates unique, pseudo-random string of numbers using the encryption key
     */
-    private String genLogBaseStr(double logBase) {
+    protected String genLogBaseStr(double logBase) {
         double sum_log = Math.log(encrypt_key_val)/Math.log(logBase);
         String sum_str = sum_log + "";
         sum_str = sum_str.replaceAll("[.]", "");
@@ -383,6 +266,22 @@ public class Cipher extends Thread{
 
     public boolean permutMapContainsKey(int k) {
         return permut_map.containsKey(k);
+    }
+
+    public boolean isEncrypt() {
+        return encrypt;
+    }
+
+    public String getJustPath() {
+        return justPath;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public Globals getGlobals() {
+        return g;
     }
 
 }

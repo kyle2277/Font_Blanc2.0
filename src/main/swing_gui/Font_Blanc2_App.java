@@ -264,11 +264,11 @@ public class Font_Blanc2_App {
                     if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
                             && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
                         //create cipher
-                        Cipher c = new Cipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
-                                curFile.getEncryptKey(), curFile.isEncrypt());
+                        progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
+                                curFile.getEncryptKey(), curFile.isEncrypt(), Font_Blanc2_App.this);
                         //run thread
-                        Progress p = new Progress(Font_Blanc2_App.this, c);
-                        p.start();
+                        Thread t = new Thread(c);
+                        t.start();
                     } else {
                         setStatus();
                     }
