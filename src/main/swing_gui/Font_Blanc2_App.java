@@ -6,6 +6,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import main.encryption_engine.*;
+//todo set encryption extension dialog
 
 public class Font_Blanc2_App {
     private JButton openFileButton;
@@ -33,15 +34,17 @@ public class Font_Blanc2_App {
     private JButton openFileSimple;
     private JProgressBar progressBar;
     private JLabel progressLabel;
-    private JButton settingsButton;
+    private JButton extButton;
     private JLabel errorKeyLabel;
     private JLabel errorPathLabel;
+    private JCheckBox extCheckBox;
     private JFileChooser fc;
     private JFileChooser dc; //directory chooser
     private HashMap<String, FilePreferences> fileMap;
     private FilePreferences curFile;
     private Globals g;
     private boolean running;
+    private static final String DEFAULT_EXTENSION = ".fb2";
 
     public Font_Blanc2_App() {
 
@@ -125,7 +128,7 @@ public class Font_Blanc2_App {
         curFile = null;
         String logPath = new File(".").getAbsolutePath();
         logPath = logPath.substring(0, logPath.length()-1);
-        g = new Globals(".txt", logPath + "log.txt");
+        g = new Globals(DEFAULT_EXTENSION, logPath + "log.txt");
         running = false;
 
         //files drag and dropped
@@ -175,6 +178,35 @@ public class Font_Blanc2_App {
                     outputField.setText(curFile.getOutPath());
                     setStatus();
                 }
+            }
+        });
+
+        //switch between using default extension and user-specified extension
+        extCheckBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                boolean selected = extCheckBox.isSelected();
+                if(selected) {
+                    g.setEncryptExt(DEFAULT_EXTENSION);
+                    extButton.setEnabled(false);
+                    setStatus();
+                } else {
+                    extButton.setEnabled(true);
+                }
+            }
+        });
+
+        //set the output extension
+        extButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                //todo open options window
+                String s = (String)JOptionPane.showInputDialog(panelMain, "Extension:", "Set Extension", JOptionPane.PLAIN_MESSAGE, null, null, g.encryptExt);
+                if((s != null) && (s.length() > 0)) {
+                    g.setEncryptExt(s);
+                    setStatus();
+                }
+                //if options are changed to empty strings do not update fields in g
             }
         });
 
@@ -271,15 +303,6 @@ public class Font_Blanc2_App {
             }
         });
 
-        //set global variables
-        settingsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                //todo open options window
-                //if options are changed to empty strings do not update fields in g
-            }
-        });
-
         //initiate encryption/decryption process
         simpleRun.addActionListener(new ActionListener() {
             @Override
@@ -304,7 +327,6 @@ public class Font_Blanc2_App {
                 }
             }
         });
-
     }
 
     /*
@@ -380,6 +402,9 @@ public class Font_Blanc2_App {
         outputField.setBackground(Color.white);
         errorKeyLabel.setVisible(false);
         errorPathLabel.setVisible(false);
+        g.setEncryptExt(DEFAULT_EXTENSION);
+        extCheckBox.setSelected(true);
+        extButton.setEnabled(false);
         encryptRadioButton.setSelected(true);
         progressBar.setValue(0);
         progressLabel.setText("");
@@ -435,6 +460,8 @@ public class Font_Blanc2_App {
             s.append(curFile.isEncrypt());
             s.append("\nKey: ");
             s.append(Arrays.toString(curFile.getEncryptKey()));
+            s.append("\nEncrypted extension: ");
+            s.append(g.encryptExt);
             String status = s.toString();
             statusArea.setText(status);
         } else {

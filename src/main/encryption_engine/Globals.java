@@ -46,4 +46,8 @@ public class Globals {
         System.exit(1);
     }
 
+    public void setEncryptExt(String ext) {
+        encryptExt = ext;
+    }
+
 }
