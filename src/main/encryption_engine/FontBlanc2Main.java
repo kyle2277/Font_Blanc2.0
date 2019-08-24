@@ -1,5 +1,7 @@
 package main.encryption_engine;
 
+import main.swing_gui.FilePreferences;
+
 import java.io.*;
 
 public class FontBlanc2Main {
@@ -15,14 +17,15 @@ public class FontBlanc2Main {
         Globals g = new Globals(encrypt_tag, decrypt_tag, encrypt_extension, log_path);
         long startTime = System.currentTimeMillis();
         String filePath = args[0];
-        String encryptKey = args[1];
+        char[] encryptKey = args[1].toCharArray();
         String EorD = args[2];
         boolean encrypt = EorD.equalsIgnoreCase("encrypt");
         if(!encrypt && !EorD.equalsIgnoreCase("decrypt")) {
             g.fatal("Invalid action.");
         }
-        Cipher c = new Cipher(g, null, null, filePath, null, encrypt);
-        //c.distributor(g, encrypt);
+        FilePreferences fp = new FilePreferences(filePath, encrypt);
+        Cipher c = new Cipher(g, fp.getFileName(), fp.getInPath(), fp.getOutPath(), encryptKey, encrypt);
+        c.distributor();
         long endTime = System.currentTimeMillis();
         System.out.println("Program execution time: " + ((double)endTime - (double)startTime)/1000 + "s");
     }

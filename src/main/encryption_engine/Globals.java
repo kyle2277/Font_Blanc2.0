@@ -25,7 +25,7 @@ public class Globals {
     */
     public void fatal(String message) {
         try {
-            File fatal = new File(logPath);
+            File fatal = new File(logPath + "log.txt");
             FileWriter out = new FileWriter(fatal, true);
             Timestamp time = new Timestamp(System.currentTimeMillis());
             out.write(time + "\n");

@@ -45,7 +45,6 @@ public class Font_Blanc2_App {
 
     public Font_Blanc2_App() {
 
-
         /*
          ******************************************ADVANCED FUNCIONALITY*************************************************
          */
@@ -124,7 +123,9 @@ public class Font_Blanc2_App {
          */
 
         curFile = null;
-        g = new Globals("e_", "d_", ".txt", new File(".").getAbsolutePath());
+        String logPath = new File(".").getAbsolutePath();
+        logPath = logPath.substring(0, logPath.length()-1);
+        g = new Globals("e_", "d_", ".txt", logPath);
         running = false;
 
         //files drag and dropped
@@ -439,7 +440,6 @@ public class Font_Blanc2_App {
         } else {
             statusArea.setText("");
         }
-
     }
 
     public void checkEncrypt(boolean encrypt) {

@@ -37,7 +37,7 @@ public class Cipher {
         System.out.println("Encrypt key: " + Arrays.toString(encrypt_key));
         encrypt_key_val = getEncryptKeyVal();
         bytes_processed = 0;
-        fileLength = fileLength(g, encrypt);
+        fileLength = fileLength(g);
         bytes_remaining = fileLength;
         permut_map = new HashMap<>();
     }
@@ -46,16 +46,11 @@ public class Cipher {
     Takes the path of the input file
     Checks if the input file exists and returns the length of the file in bytes
      */
-    private long fileLength(Globals g, boolean encrypt) {
+    private long fileLength(Globals g) {
         File f;
         String fullPath;
-        if(encrypt) {
-            fullPath = justPath + fileName;
-            f = new File(fullPath);
-        } else { //EorD = "decrypt"
-            fullPath = justPath + g.encryptTag + fileName + g.encryptExt;
-            f = new File(fullPath);
-        }
+        fullPath = justPath + fileName;
+        f = new File(fullPath);
         if(f.exists()) {
             return f.length();
         } else {
@@ -77,7 +72,7 @@ public class Cipher {
     inverted permutation matrix
     Breaks the file into chunks to be separately encrypted/decrypted
     */
-    public void distributor() throws IOException, InterruptedException {
+    public void distributor() throws IOException {
         FileInputStream in = null;
         FileOutputStream out = null;
         int coeff = 0;
@@ -88,7 +83,7 @@ public class Cipher {
                 coeff = 1;
                 System.out.println("Encrypting...");
             } else { //decrypt
-                in = new FileInputStream(justPath + g.encryptTag + fileName + g.encryptExt);
+                in = new FileInputStream(justPath + fileName);
                 out = new FileOutputStream(fileOutPath + g.decryptTag + fileName);
                 coeff = -1;
                 System.out.println("Decrypting...");
@@ -97,7 +92,7 @@ public class Cipher {
             int encryptMapLen = encryptMap.length();
             int mapItr = 0;
             while(bytes_remaining >= 1024) {
-                if (mapItr == encryptMapLen) {
+                if(mapItr == encryptMapLen) {
                     mapItr = 0;
                 }
                 //generate permutation dimension
@@ -106,7 +101,7 @@ public class Cipher {
                 permutCipher(dimension, in, out);
                 mapItr++;
             }
-            permutCipher((int) bytes_remaining, in, out);
+            permutCipher(coeff * (int) bytes_remaining, in, out);
         } catch(IOException e) {
             g.fatal("Output path not found.");
         } finally {
@@ -147,7 +142,7 @@ public class Cipher {
     Takes the matrix dimension, a list of bytes from the file and relevant permutation matrix
     Performs the linear transformation operation on the byte vector and returns the resulting vector
     */
-    protected DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseCSC permutMat) {
+    private DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseCSC permutMat) {
         DMatrixSparseCSC vec = new DMatrixSparseCSC(dimension, 1, dimension);
         for(int i = 0; i < dimension; i++) {
             vec.set(i, 0, fileBytes[i]);
@@ -165,7 +160,7 @@ public class Cipher {
     /*
     Generates unique, pseudo-random string of numbers using the encryption key
     */
-    protected String genLogBaseStr(double logBase) {
+    private String genLogBaseStr(double logBase) {
         double sum_log = Math.log(encrypt_key_val)/Math.log(logBase);
         String sum_str = sum_log + "";
         sum_str = sum_str.replaceAll("[.]", "");
@@ -193,7 +188,7 @@ public class Cipher {
     Takes the dimension of the matrix to create and whether to invert it
     Generates unique n-dimensional permutation matrices from the encryption key
     */
-    public DMatrixSparseCSC gen_permut_mat(int dimension, boolean inverse) {
+    private DMatrixSparseCSC gen_permut_mat(int dimension, boolean inverse) {
         //System.out.println(encrypt_key_val);
         int num_matrices = 1;
         if(2*dimension > 16) {
@@ -205,6 +200,7 @@ public class Cipher {
             String logStr = genLogBaseStr((double) logBaseStr);
             strTotal.append(logStr);
         }
+        String nums = strTotal.toString();
         //System.out.println(strTotal);
         //build permutation matrix
         ArrayList<Integer> rows = new ArrayList<Integer>();
@@ -214,11 +210,11 @@ public class Cipher {
         //creating array to build permutation matrix
         for(int i = 0; i < dimension; rows.add(i), cols.add(i), i++);
         for(int i = 0; i < 2*dimension; i++) {
-            int row = Character.getNumericValue(strTotal.charAt(i));
+            int row = Character.getNumericValue(nums.charAt(i));
             row = row % rows.size();
             int rowIndex = rows.remove(row);
             i++;
-            int column = Character.getNumericValue(strTotal.charAt(i));
+            int column = Character.getNumericValue(nums.charAt(i));
             column = column % cols.size();
             int columnIndex = cols.remove(column);
             permut_matrix.set(rowIndex, columnIndex, 1);
