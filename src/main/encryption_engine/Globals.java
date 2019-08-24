@@ -19,13 +19,17 @@ public class Globals {
         this.logPath = logPath;
     }
 
+    public Globals(String encryptExt, String logPath) {
+        this("", "", encryptExt, logPath);
+    }
+
     /*
     Triggered if a fatal error occurs. Writes the error to the console and log file
     before program termination
     */
     public void fatal(String message) {
         try {
-            File fatal = new File(logPath + "log.txt");
+            File fatal = new File(logPath);
             FileWriter out = new FileWriter(fatal, true);
             Timestamp time = new Timestamp(System.currentTimeMillis());
             out.write(time + "\n");

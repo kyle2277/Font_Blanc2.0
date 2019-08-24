@@ -1,4 +1,5 @@
 package main.swing_gui;
+
 import java.io.*;
 import java.util.*;
 
@@ -65,6 +66,10 @@ public class FilePreferences {
 
     private boolean pathExists(String path) {
         return new File(path).exists();
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
     public void setEncryptKey(char[] encryptKey) {

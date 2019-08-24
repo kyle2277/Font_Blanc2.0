@@ -125,7 +125,7 @@ public class Font_Blanc2_App {
         curFile = null;
         String logPath = new File(".").getAbsolutePath();
         logPath = logPath.substring(0, logPath.length()-1);
-        g = new Globals("e_", "d_", ".txt", logPath);
+        g = new Globals(".txt", logPath + "log.txt");
         running = false;
 
         //files drag and dropped
@@ -452,7 +452,7 @@ public class Font_Blanc2_App {
 
     public void cleanCurFile() {
         if(curFile != null && curFile.getEncryptKey() != null && curFile.getEncryptKey().length > 0) {
-            Arrays.fill(curFile.getEncryptKey(), '0');
+            FilePreferences.clean(curFile);
         }
         curFile = null;
     }

@@ -79,12 +79,20 @@ public class Cipher {
         try {
             if(encrypt) {
                 in = new FileInputStream(justPath + fileName);
-                out = new FileOutputStream(fileOutPath + g.encryptTag + fileName + g.encryptExt);
+                String outName = fileName;
+                if(!outName.contains(g.encryptExt)) {
+                    outName += g.encryptExt;
+                }
+                out = new FileOutputStream(fileOutPath + g.encryptTag + outName);
                 coeff = 1;
                 System.out.println("Encrypting...");
             } else { //decrypt
                 in = new FileInputStream(justPath + fileName);
-                out = new FileOutputStream(fileOutPath + g.decryptTag + fileName);
+                String outName = fileName;
+                if (outName.contains(g.encryptExt)) {
+                    outName = outName.substring(0, outName.length() - g.encryptExt.length());
+                }
+                out = new FileOutputStream(fileOutPath + g.decryptTag + outName);
                 coeff = -1;
                 System.out.println("Decrypting...");
             }
