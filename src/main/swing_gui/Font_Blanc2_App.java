@@ -1,6 +1,7 @@
 package main.swing_gui;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
@@ -21,8 +22,8 @@ public class Font_Blanc2_App {
     private JTextField outputField;
     private JCheckBox outputCheckbox;
     private JPasswordField keyField;
-    private JButton simpleGO;
-    private JButton advancedGO;
+    private JButton simpleRun;
+    private JButton advancedRun;
     private JButton setOutputButton;
     private JLabel keyLabel;
     private JLabel outputLabel;
@@ -33,6 +34,8 @@ public class Font_Blanc2_App {
     private JProgressBar progressBar;
     private JLabel progressLabel;
     private JButton settingsButton;
+    private JLabel errorKeyLabel;
+    private JLabel errorPathLabel;
     private JFileChooser fc;
     private JFileChooser dc; //directory chooser
     private HashMap<String, FilePreferences> fileMap;
@@ -205,8 +208,9 @@ public class Font_Blanc2_App {
                 int returnVal = dc.showOpenDialog(panelMain);
                 if(returnVal == JFileChooser.APPROVE_OPTION) {
                     File f = dc.getSelectedFile();
-                    String path = f.getAbsolutePath();
+                    String path = f.getAbsolutePath() + "/";
                     outputField.setText(path);
+                    curFile.setOutPath(path);
                     setStatus();
                 }
             }
@@ -233,6 +237,16 @@ public class Font_Blanc2_App {
             }
         });
 
+        //restore background to white when focus regained
+        outputField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent focusEvent) {
+                super.focusGained(focusEvent);
+                outputField.setBackground(Color.white);
+                errorPathLabel.setVisible(false);
+            }
+        });
+
         //update file object encrypt key when focus leaves field
         keyField.addFocusListener(new FocusAdapter() {
             @Override
@@ -246,6 +260,16 @@ public class Font_Blanc2_App {
             }
         });
 
+        //restore background to white when focus gained
+        keyField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent focusEvent) {
+                super.focusGained(focusEvent);
+                keyField.setBackground(Color.white);
+                errorKeyLabel.setVisible(false);
+            }
+        });
+
         //set global variables
         settingsButton.addActionListener(new ActionListener() {
             @Override
@@ -256,12 +280,18 @@ public class Font_Blanc2_App {
         });
 
         //initiate encryption/decryption process
-        simpleGO.addActionListener(new ActionListener() {
+        simpleRun.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 //check curFile has no null fields
                 if(!isRunning()) {
-                    if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
+                    if(curFile != null && curFile.getEncryptKey() == null) {
+                        keyField.setBackground(Color.red);
+                        errorKeyLabel.setVisible(true);
+                    } else if(curFile != null && curFile.getOutPath() == null) {
+                        outputField.setBackground(Color.red);
+                        errorPathLabel.setVisible(true);
+                    } else if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
                             && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
                         //create cipher
                         progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
@@ -269,12 +299,11 @@ public class Font_Blanc2_App {
                         //run thread
                         Thread t = new Thread(c);
                         t.start();
-                    } else {
-                        setStatus();
                     }
                 }
             }
         });
+
     }
 
     /*
@@ -318,7 +347,7 @@ public class Font_Blanc2_App {
         removeSelectedButton.setVisible(true);
         preferencesButton.setVisible(true);
         copyPrefsButton.setVisible(true);
-        advancedGO.setVisible(true);
+        advancedRun.setVisible(true);
         advancedReset.setVisible(true);
     }
 
@@ -334,7 +363,7 @@ public class Font_Blanc2_App {
         removeSelectedButton.setVisible(false);
         preferencesButton.setVisible(false);
         copyPrefsButton.setVisible(false);
-        advancedGO.setVisible(false);
+        advancedRun.setVisible(false);
         advancedReset.setVisible(false);
     }
 
@@ -346,12 +375,17 @@ public class Font_Blanc2_App {
         //reset curFile
         cleanCurFile();
         setStatus();
+        keyField.setBackground(Color.white);
+        outputField.setBackground(Color.white);
+        errorKeyLabel.setVisible(false);
+        errorPathLabel.setVisible(false);
         encryptRadioButton.setSelected(true);
         progressBar.setValue(0);
         progressLabel.setText("");
         keyField.setText("");
         outputField.setText("");
         outputCheckbox.setSelected(true);
+        outputField.setEditable(false);
         setOutputButton.setEnabled(false);
     }
 
@@ -369,7 +403,7 @@ public class Font_Blanc2_App {
         setOutputButton.setVisible(true);
         setOutputButton.setEnabled(false);
         statusArea.setVisible(true);
-        simpleGO.setVisible(true);
+        simpleRun.setVisible(true);
         simpleReset.setVisible(true);
     }
 
@@ -384,7 +418,7 @@ public class Font_Blanc2_App {
         outputField.setVisible(false);
         setOutputButton.setVisible(false);
         statusArea.setVisible(false);
-        simpleGO.setVisible(false);
+        simpleRun.setVisible(false);
         simpleReset.setVisible(false);
     }
 

@@ -84,12 +84,12 @@ public class Cipher {
         try {
             if(encrypt) {
                 in = new FileInputStream(justPath + fileName);
-                out = new FileOutputStream(justPath + g.encryptTag + fileName + g.encryptExt);
+                out = new FileOutputStream(fileOutPath + g.encryptTag + fileName + g.encryptExt);
                 coeff = 1;
                 System.out.println("Encrypting...");
             } else { //decrypt
                 in = new FileInputStream(justPath + g.encryptTag + fileName + g.encryptExt);
-                out = new FileOutputStream(justPath + g.decryptTag + fileName);
+                out = new FileOutputStream(fileOutPath + g.decryptTag + fileName);
                 coeff = -1;
                 System.out.println("Decrypting...");
             }

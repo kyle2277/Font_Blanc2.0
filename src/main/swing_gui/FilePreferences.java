@@ -1,4 +1,5 @@
 package main.swing_gui;
+import java.io.*;
 import java.util.*;
 
 public class FilePreferences {
@@ -59,7 +60,11 @@ public class FilePreferences {
     }
 
     public void setOutPath(String outPath) {
-        this.outPath = outPath;
+        this.outPath = pathExists(outPath) ? outPath : null;
+    }
+
+    private boolean pathExists(String path) {
+        return new File(path).exists();
     }
 
     public void setEncryptKey(char[] encryptKey) {
