@@ -6,7 +6,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import main.encryption_engine.*;
-//todo set encryption extension dialog
 
 public class Font_Blanc2_App {
     private JButton openFileButton;
@@ -200,7 +199,6 @@ public class Font_Blanc2_App {
         extButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                //todo open options window
                 String s = (String)JOptionPane.showInputDialog(panelMain, "Extension:", "Set Extension", JOptionPane.PLAIN_MESSAGE, null, null, g.encryptExt);
                 if((s != null) && (s.length() > 0)) {
                     g.setEncryptExt(s);

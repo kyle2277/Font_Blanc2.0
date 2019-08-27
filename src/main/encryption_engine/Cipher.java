@@ -22,6 +22,7 @@ public class Cipher {
     private boolean encrypt;
     private Globals g;
     private HashMap<Integer, DMatrixSparseCSC> permut_map;
+    private static final int MAX_DIMENSION = 1024;
 
     public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey, boolean encrypt) {
         this.g = g;
@@ -96,19 +97,16 @@ public class Cipher {
                 coeff = -1;
                 System.out.println("Decrypting...");
             }
-            String encryptMap = genLogBaseStr(Math.exp(1));
+//            String encryptMap = genLogBaseStr(Math.exp(1));
+            String encryptMap = genStringVals((int)bytes_remaining/MAX_DIMENSION);
             int encryptMapLen = encryptMap.length();
-            int mapItr = 0;
-            while(bytes_remaining >= 1024) {
-                if(mapItr == encryptMapLen) {
-                    mapItr = 0;
-                }
+            for(int mapItr = 0; bytes_remaining >= MAX_DIMENSION; mapItr++) {
                 //generate permutation dimension
-                int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr)) + 1;
-                int dimension = coeff * (1024 / permutDimension);
-                permutCipher(dimension, in, out);
-                mapItr++;
+                int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr % encryptMapLen));
+                int dimension = permutDimension > 1 ? (MAX_DIMENSION - (MAX_DIMENSION / permutDimension)) : MAX_DIMENSION;
+                permutCipher(coeff*dimension, in, out);
             }
+
             permutCipher(coeff * (int) bytes_remaining, in, out);
         } catch(IOException e) {
             g.fatal("Output path not found.");
@@ -150,6 +148,7 @@ public class Cipher {
     Takes the matrix dimension, a list of bytes from the file and relevant permutation matrix
     Performs the linear transformation operation on the byte vector and returns the resulting vector
     */
+    //todo implement u dot v = Bu dot Bv
     private DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseCSC permutMat) {
         DMatrixSparseCSC vec = new DMatrixSparseCSC(dimension, 1, dimension);
         for(int i = 0; i < dimension; i++) {
@@ -198,18 +197,8 @@ public class Cipher {
     */
     private DMatrixSparseCSC gen_permut_mat(int dimension, boolean inverse) {
         //System.out.println(encrypt_key_val);
-        int num_matrices = 1;
-        if(2*dimension > 16) {
-            num_matrices = (((2*dimension) - ((2*dimension)%16))/16) + 1;
-        }
-        StringBuilder strTotal = new StringBuilder();
-        for(int i = 0; i < num_matrices; i++) {
-            int logBaseStr = i + dimension;
-            String logStr = genLogBaseStr((double) logBaseStr);
-            strTotal.append(logStr);
-        }
-        String nums = strTotal.toString();
-        //System.out.println(strTotal);
+        String nums = genStringVals(2*dimension);
+        //System.out.println(nums);
         //build permutation matrix
         ArrayList<Integer> rows = new ArrayList<Integer>();
         ArrayList<Integer> cols = new ArrayList<Integer>();
@@ -238,6 +227,20 @@ public class Cipher {
         } else {
             return permut_matrix;
         }
+    }
+
+    private String genStringVals(int approx) {
+        int num_matrices = 1;
+        if(approx > 16) {
+            num_matrices = ((approx - (approx%16))/16) + 1;
+        }
+        StringBuilder strTotal = new StringBuilder();
+        for(int i = 0; i < num_matrices; i++) {
+            int logBaseStr = i + approx;
+            String logStr = genLogBaseStr((double) logBaseStr);
+            strTotal.append(logStr);
+        }
+        return strTotal.toString();
     }
 
     public long getFileLength() {
