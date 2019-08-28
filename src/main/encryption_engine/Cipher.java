@@ -21,7 +21,7 @@ public class Cipher {
     private long bytes_remaining;
     private boolean encrypt;
     private Globals g;
-    private HashMap<Integer, DMatrixSparseCSC> permut_map;
+    private HashMap<Integer, Mat> permut_map;
     private static final int MAX_DIMENSION = 1024;
 
     public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey, boolean encrypt) {
@@ -106,7 +106,6 @@ public class Cipher {
                 int dimension = permutDimension > 1 ? (MAX_DIMENSION - (MAX_DIMENSION / permutDimension)) : MAX_DIMENSION;
                 permutCipher(coeff*dimension, in, out);
             }
-
             permutCipher(coeff * (int) bytes_remaining, in, out);
         } catch(IOException e) {
             g.fatal("Output path not found.");
@@ -122,19 +121,29 @@ public class Cipher {
     Writes resulting vector of bytes to file
     */
     protected void permutCipher(int dimension, FileInputStream in, FileOutputStream out) throws IOException {
-        DMatrixSparseCSC permutMat;
+        Mat m;
         if(permut_map.containsKey(dimension)) {
-            permutMat = permut_map.get(dimension);
+            m = permut_map.get(dimension);
         } else {
-            permutMat = gen_permut_mat(Math.abs(dimension), (dimension < 0));
-            permut_map.put(dimension, permutMat);
+            m = gen_permut_mat(Math.abs(dimension), (dimension < 0));
+            permut_map.put(dimension, m);
         }
         //dimension no longer needs to be negative to signify inverse operation
         dimension = Math.abs(dimension);
         byte[] fileBytes = new byte[dimension];
         in.read(fileBytes, 0, dimension);
         //System.out.println(Arrays.toString(unencryptedBytes));
-        DMatrixSparseCSC resultantVec = transformVec(dimension, fileBytes, permutMat);
+        DMatrixSparseCSC vec = bArrToCSCMat(fileBytes, dimension);
+        DMatrixSparseCSC resultantVec = transformVec(dimension, vec, m.getMat());
+        //dot check
+        int dotBef = dotProduct(vec, m.getCheckBef(), dimension);
+        int dotAft = dotProduct(resultantVec, m.getCheckAft(), dimension);
+        System.out.println(dotBef + "\n" + dotAft);
+        if(dotBef != dotAft) {
+            String message = "Data corruption detected.\nUnencrypted bytes remaining: " + getBytesRemaining();
+            g.fatal(message);
+            System.exit(1);
+        }
         for(int i = 0; i < dimension; i++) {
             byte write_byte = (byte) ((Math.round(resultantVec.get(i, 0))) & 0xff);
             //System.out.println(write_byte);
@@ -145,23 +154,35 @@ public class Cipher {
     }
 
     /*
+    Takes an array of bytes and the size of the array. Converts the array into a matrix object and returns it
+     */
+    private DMatrixSparseCSC bArrToCSCMat(byte[] bytes, int dimension) {
+        DMatrixSparseCSC vec = new DMatrixSparseCSC(dimension, 1, dimension);
+        //convert to CSC matrix
+        for(int i = 0; i < dimension; vec.set(i, 0, bytes[i]), i++);
+        return vec;
+    }
+
+    /*
     Takes the matrix dimension, a list of bytes from the file and relevant permutation matrix
     Performs the linear transformation operation on the byte vector and returns the resulting vector
     */
-    //todo implement u dot v = Bu dot Bv
-    private DMatrixSparseCSC transformVec(int dimension, byte[] fileBytes, DMatrixSparseCSC permutMat) {
-        DMatrixSparseCSC vec = new DMatrixSparseCSC(dimension, 1, dimension);
-        for(int i = 0; i < dimension; i++) {
-            vec.set(i, 0, fileBytes[i]);
-        }
-        //convert to CSC matrix
+    private DMatrixSparseCSC transformVec(int dimension, DMatrixSparseCSC fileBytes, DMatrixSparseCSC permutMat) {
         //allocate memory for the matrix operation
         IGrowArray workA = new IGrowArray(permutMat.numRows);
         DGrowArray workB = new DGrowArray(permutMat.numRows);
         DMatrixSparseCSC resultantVec = new DMatrixSparseCSC(dimension, 1, dimension);
-        CommonOps_DSCC.mult(permutMat, vec, resultantVec, workA, workB);
+        CommonOps_DSCC.mult(permutMat, fileBytes, resultantVec, workA, workB);
         //encryptedVec.print();
         return resultantVec;
+    }
+
+    private int dotProduct(DMatrixSparseCSC a, DMatrixSparseCSC b, int dimension) {
+        int result = 0;
+        for(int i = 0; i < dimension; i++) {
+            result += (int)a.get(i, 0) * (int)b.get(i, 0);
+        }
+        return result;
     }
 
     /*
@@ -195,7 +216,7 @@ public class Cipher {
     Takes the dimension of the matrix to create and whether to invert it
     Generates unique n-dimensional permutation matrices from the encryption key
     */
-    private DMatrixSparseCSC gen_permut_mat(int dimension, boolean inverse) {
+    private Mat gen_permut_mat(int dimension, boolean inverse) {
         //System.out.println(encrypt_key_val);
         String nums = genStringVals(2*dimension);
         //System.out.println(nums);
@@ -203,9 +224,12 @@ public class Cipher {
         ArrayList<Integer> rows = new ArrayList<Integer>();
         ArrayList<Integer> cols = new ArrayList<Integer>();
         DMatrixSparseCSC permut_matrix = new DMatrixSparseCSC(dimension, dimension, dimension);
+        Mat m = new Mat();
         //expensive computation
         //creating array to build permutation matrix
-        for(int i = 0; i < dimension; rows.add(i), cols.add(i), i++);
+        DMatrixSparseCSC checkBef = new DMatrixSparseCSC(dimension, 1, dimension);
+        for(int i = 0; i < dimension; rows.add(i), cols.add(i), checkBef.set(i, 0, i), i++);
+        m.setCheckBef(checkBef);
         for(int i = 0; i < 2*dimension; i++) {
             int row = Character.getNumericValue(nums.charAt(i));
             row = row % rows.size();
@@ -218,15 +242,20 @@ public class Cipher {
             //System.out.println(rows);
             //System.out.println(cols);
         }
+        DMatrixSparseCSC pm;
         if(inverse) {
             //convert to CSC matrix
             //allocate memory for the matrix operation
             IGrowArray workA = new IGrowArray(permut_matrix.numRows);
             DMatrixSparseCSC mat_transpose_CSC = new DMatrixSparseCSC(dimension, dimension, dimension);
-            return CommonOps_DSCC.transpose(permut_matrix, mat_transpose_CSC, workA);
+            pm = CommonOps_DSCC.transpose(permut_matrix, mat_transpose_CSC, workA);
         } else {
-            return permut_matrix;
+            pm = permut_matrix;
         }
+        m.setMat(pm);
+        DMatrixSparseCSC checkAft = transformVec(dimension, m.getCheckBef(), pm);
+        m.setCheckAft(checkAft);
+        return m;
     }
 
     private String genStringVals(int approx) {
@@ -263,11 +292,11 @@ public class Cipher {
         bytes_remaining = bytes;
     }
 
-    public void putPermutMap(int k, DMatrixSparseCSC v) {
+    public void putPermutMap(int k, Mat v) {
         permut_map.put(k, v);
     }
 
-    public DMatrixSparseCSC getPermutMap(int k) {
+    public Mat getPermutMap(int k) {
         return permut_map.get(k);
     }
 
