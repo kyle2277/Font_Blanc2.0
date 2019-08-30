@@ -15,16 +15,19 @@ public class Cipher {
     private String fileName;
     private String fileOutPath;
     private char[] encrypt_key;
+    private byte[] fileBytes;
     private int encrypt_key_val;
     private long fileLength;
     private long bytes_processed;
     private long bytes_remaining;
     private boolean encrypt;
     private Globals g;
+    private  Deque<int[]> instructions;
     private HashMap<Integer, Mat> permut_map;
     private static final int MAX_DIMENSION = 1024;
 
-    public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey, boolean encrypt) {
+    public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey,
+                  boolean encrypt, Deque<int[]> instructions) {
         this.g = g;
         this.encrypt = encrypt;
         encrypt_key = encryptKey;
@@ -40,6 +43,7 @@ public class Cipher {
         bytes_processed = 0;
         fileLength = fileLength(g);
         bytes_remaining = fileLength;
+        this.instructions = instructions;
         permut_map = new HashMap<>();
     }
 
@@ -50,12 +54,12 @@ public class Cipher {
     private long fileLength(Globals g) {
         File f;
         String fullPath;
-        fullPath = justPath + fileName;
+        fullPath = getJustPath() + getFileName();
         f = new File(fullPath);
         if(f.exists()) {
             return f.length();
         } else {
-            g.fatal("File " + fileName + " does not exist");
+            g.fatal("File " + getFileName() + " does not exist.");
             return 0;
         }
     }
@@ -68,50 +72,109 @@ public class Cipher {
         return sum;
     }
 
+    protected int execute() {
+        byte[] fileBytes = readInput();
+        setFileBytes(fileBytes);
+        readInstructions();
+        writeOutput();
+        return 1;
+    }
+
+    /*
+    Reads and executes instructions in the correct order
+    Instruction list length must be at least one
+     */
+    private void readInstructions() {
+        int coeff = isEncrypt() ? 1 : -1;
+        Deque<int[]> instructions = getInstructions();
+        int[] current = isEncrypt() ? instructions.pollFirst() : instructions.pollLast();
+        if(current != null) {
+            while(current != null) {
+                setBytesRemaining(getFileLength());
+                setBytesProcessed(0);
+                int flexible = current[0];
+                int dimension = current[1];
+                if(flexible > 0) { //fixed dimension
+                    fixedDistributor(dimension, coeff);
+                } else { //flexible dimension
+                    randDistributor(coeff);
+                }
+                current = isEncrypt() ? instructions.pollFirst() : instructions.pollLast();
+            }
+        } else {
+            g.fatal("Process instructions empty.");
+        }
+    }
+
+    private byte[] readInput() {
+        //todo file size limited to ~2GB by cast to int
+        try {
+            byte[] fileBytes = new byte[(int)getFileLength()];
+            String inPath = getJustPath() + getFileName();
+            FileInputStream in = new FileInputStream(inPath);
+            in.read(fileBytes, 0, (int)getFileLength());
+            in.close();
+            return fileBytes;
+        } catch (IOException e) {
+            g.fatal("File " + getFileName() + " not found.");
+        }
+        return null;
+    }
+
+    private void writeOutput() {
+        FileOutputStream out;
+        try {
+            String outName = getFileName();
+            if(isEncrypt()) {
+                outName = g.encryptTag + outName;
+                if(!outName.contains(g.encryptExt)) {
+                    outName += g.encryptExt;
+                }
+            } else if(!isEncrypt()) {
+                outName = g.decryptTag + outName;
+                if(outName.contains(g.encryptExt)) {
+                    outName = outName.substring(0, outName.length() - g.encryptExt.length());
+                }
+            }
+            out = new FileOutputStream(fileOutPath + outName);
+            out.write(getFileBytes(), 0, (int)getFileLength());
+        } catch (IOException e) {
+            g.fatal("Output path not found.");
+        }
+    }
+
     /*
     Takes objects for reading and writing to file and the coefficient which tells whether to fetch the normal or
     inverted permutation matrix
     Breaks the file into chunks to be separately encrypted/decrypted
     */
-    public void distributor() throws IOException {
-        FileInputStream in = null;
-        FileOutputStream out = null;
-        int coeff = 0;
-        try {
-            if(encrypt) {
-                in = new FileInputStream(justPath + fileName);
-                String outName = fileName;
-                if(!outName.contains(g.encryptExt)) {
-                    outName += g.encryptExt;
-                }
-                out = new FileOutputStream(fileOutPath + g.encryptTag + outName);
-                coeff = 1;
-                System.out.println("Encrypting...");
-            } else { //decrypt
-                in = new FileInputStream(justPath + fileName);
-                String outName = fileName;
-                if (outName.contains(g.encryptExt)) {
-                    outName = outName.substring(0, outName.length() - g.encryptExt.length());
-                }
-                out = new FileOutputStream(fileOutPath + g.decryptTag + outName);
-                coeff = -1;
-                System.out.println("Decrypting...");
-            }
+    public void randDistributor(int coeff) {
 //            String encryptMap = genLogBaseStr(Math.exp(1));
-            String encryptMap = genStringVals((int)bytes_remaining/MAX_DIMENSION);
-            int encryptMapLen = encryptMap.length();
-            for(int mapItr = 0; bytes_remaining >= MAX_DIMENSION; mapItr++) {
-                //generate permutation dimension
-                int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr % encryptMapLen));
-                int dimension = permutDimension > 1 ? (MAX_DIMENSION - (MAX_DIMENSION / permutDimension)) : MAX_DIMENSION;
-                permutCipher(coeff*dimension, in, out);
-            }
-            permutCipher(coeff * (int) bytes_remaining, in, out);
-        } catch(IOException e) {
-            g.fatal("Output path not found.");
-        } finally {
-            if (in != null) { in.close(); }
-            if (out != null) { out.close(); }
+        String encryptMap = genStringVals((int)bytes_remaining/MAX_DIMENSION);
+        int encryptMapLen = encryptMap.length();
+        for(int mapItr = 0; bytes_remaining >= MAX_DIMENSION; mapItr++) {
+            //generate permutation dimension
+            int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr % encryptMapLen));
+            int dimension = permutDimension > 1 ? (MAX_DIMENSION - (MAX_DIMENSION / permutDimension)) : MAX_DIMENSION;
+            permutCipher(coeff*dimension);
+        }
+        int b = (int) getBytesRemaining();
+        if(b > 0) {
+            permutCipher(coeff * (int) bytes_remaining);
+        }
+    }
+
+    /*
+    Run process with a fixed matrix dimension size
+    Takes dimension to use and whether to encrypt or decrypt
+     */
+    public void fixedDistributor(int dimension, int coeff) {
+        while(getBytesRemaining() >= dimension) {
+            permutCipher(coeff*dimension);
+        }
+        int b = (int) getBytesRemaining();
+        if(b > 0) {
+            permutCipher(coeff*(int)getBytesRemaining());
         }
     }
 
@@ -120,7 +183,8 @@ public class Cipher {
     Facilitates the matrix transformation using n-dimensional permutation matrix
     Writes resulting vector of bytes to file
     */
-    protected void permutCipher(int dimension, FileInputStream in, FileOutputStream out) throws IOException {
+    protected void permutCipher(int dimension) {
+        long ref = getBytesProcessed();
         Mat m;
         if(permut_map.containsKey(dimension)) {
             m = permut_map.get(dimension);
@@ -130,8 +194,8 @@ public class Cipher {
         }
         //dimension no longer needs to be negative to signify inverse operation
         dimension = Math.abs(dimension);
-        byte[] fileBytes = new byte[dimension];
-        in.read(fileBytes, 0, dimension);
+        byte[] fileBytes;
+        fileBytes = Arrays.copyOfRange(getFileBytes(), (int)ref, (int)ref+dimension);
         //System.out.println(Arrays.toString(unencryptedBytes));
         DMatrixSparseCSC vec = bArrToCSCMat(fileBytes, dimension);
         DMatrixSparseCSC resultantVec = transformVec(dimension, vec, m.getMat());
@@ -144,10 +208,10 @@ public class Cipher {
             g.fatal(message);
             System.exit(1);
         }
-        for(int i = 0; i < dimension; i++) {
-            byte write_byte = (byte) ((Math.round(resultantVec.get(i, 0))) & 0xff);
+        for(int i = (int)ref; i < ref+dimension; i++) {
+            byte write_byte = (byte) ((Math.round(resultantVec.get(i-(int)ref, 0))) & 0xff);
+            setFileByte(write_byte, i);
             //System.out.println(write_byte);
-            out.write(write_byte);
         }
         bytes_processed += dimension;
         bytes_remaining -= dimension;
@@ -320,4 +384,19 @@ public class Cipher {
         return g;
     }
 
+    public void setFileBytes(byte[] fileBytes) {
+        this.fileBytes = fileBytes;
+    }
+
+    public byte[] getFileBytes() {
+        return fileBytes;
+    }
+
+    public void setFileByte(byte b, int index) {
+        getFileBytes()[index] = b;
+    }
+
+    public Deque<int[]> getInstructions() {
+        return instructions;
+    }
 }

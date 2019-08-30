@@ -316,8 +316,9 @@ public class Font_Blanc2_App {
                     } else if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
                             && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
                         //create cipher
+                        curFile.setInstructions(generateInstructions());
                         progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
-                                curFile.getEncryptKey(), curFile.isEncrypt(), Font_Blanc2_App.this);
+                                curFile.getEncryptKey(), curFile.isEncrypt(), curFile.getInstructions(), Font_Blanc2_App.this);
                         //run thread
                         Thread t = new Thread(c);
                         t.start();
@@ -480,6 +481,13 @@ public class Font_Blanc2_App {
             FilePreferences.clean(curFile);
         }
         curFile = null;
+    }
+
+    public Deque<int[]> generateInstructions() {
+        Deque<int[]> instructions = new LinkedList<>();
+        //instructions.add(curFile.createInstruction(1, 1024));
+        instructions.add(curFile.createInstruction(0,0));
+        return instructions;
     }
 
     public static void main(String[] args) {

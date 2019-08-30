@@ -2,6 +2,7 @@ package main.encryption_engine;
 
 import main.swing_gui.Font_Blanc2_App;
 import java.io.*;
+import java.util.*;
 
 /*
 A subclass of Cipher that updates progress of the encryption and supports multithreading
@@ -10,8 +11,9 @@ public class progressCipher extends Cipher implements Runnable {
 
     private Font_Blanc2_App app;
 
-    public progressCipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey, boolean encrypt, Font_Blanc2_App app) {
-        super(g, fileName, fileInPath, fileOutPath, encryptKey, encrypt);
+    public progressCipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey,
+                          boolean encrypt, Deque<int[]> instructions, Font_Blanc2_App app) {
+        super(g, fileName, fileInPath, fileOutPath, encryptKey, encrypt, instructions);
         this.app = app;
     }
 
@@ -22,7 +24,7 @@ public class progressCipher extends Cipher implements Runnable {
             app.setRunning(true);
             app.setProgressLabel("Working");
             app.setProgressBar(0);
-            distributor();
+            execute();
             app.setProgressBar(100);
             app.setProgressLabel("Done");
             System.out.println("Done");
@@ -37,8 +39,8 @@ public class progressCipher extends Cipher implements Runnable {
     }
 
     @Override
-    protected void permutCipher(int dimension, FileInputStream in, FileOutputStream out) throws IOException {
-        super.permutCipher(dimension, in, out);
+    protected void permutCipher(int dimension) {
+        super.permutCipher(dimension);
         app.setProgressBar((int)(((double)getBytesProcessed()/(double)getFileLength())*100));
     }
 

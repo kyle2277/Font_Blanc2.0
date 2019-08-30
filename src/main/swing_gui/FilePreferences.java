@@ -10,6 +10,7 @@ public class FilePreferences {
     private String outPath;
     private char[] encryptKey;
     private boolean encrypt;
+    private Deque<int[]> instructions;
 
     public FilePreferences(String filePath, boolean encrypt) {
         this.encrypt = encrypt;
@@ -40,6 +41,15 @@ public class FilePreferences {
         fileName = split[splitLen - 1];
     }
 
+    public int[] createInstruction(int fixed, int dimension) {
+        int[] instruction = new int[] {0,0}; //preset flexible dimension
+        if(fixed > 0) { //fixed dimension
+            instruction[0] = fixed;
+            instruction[1] = dimension;
+        }
+        return instruction;
+    }
+
     public String getFileName() {
         return fileName;
     }
@@ -54,6 +64,14 @@ public class FilePreferences {
 
     public char[] getEncryptKey() {
         return encryptKey;
+    }
+
+    public void setInstructions(Deque<int[]> instructions) {
+        this.instructions = instructions;
+    }
+
+    public Deque<int[]> getInstructions() {
+        return instructions;
     }
 
     public boolean isEncrypt() {

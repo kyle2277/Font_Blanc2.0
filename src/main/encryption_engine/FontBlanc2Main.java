@@ -3,6 +3,7 @@ package main.encryption_engine;
 import main.swing_gui.FilePreferences;
 
 import java.io.*;
+import java.util.*;
 
 public class FontBlanc2Main {
 
@@ -24,8 +25,12 @@ public class FontBlanc2Main {
             g.fatal("Invalid action.");
         }
         FilePreferences fp = new FilePreferences(filePath, encrypt);
-        Cipher c = new Cipher(g, fp.getFileName(), fp.getInPath(), fp.getOutPath(), encryptKey, encrypt);
-        c.distributor();
+        Deque<int[]> instructions = new LinkedList<>();
+        instructions.add(fp.createInstruction(1, 10));
+        instructions.add(fp.createInstruction(0,0));
+        fp.setInstructions(instructions);
+        Cipher c = new Cipher(g, fp.getFileName(), fp.getInPath(), fp.getOutPath(), encryptKey, encrypt, fp.getInstructions());
+        c.execute();
         long endTime = System.currentTimeMillis();
         System.out.println("Program execution time: " + ((double)endTime - (double)startTime)/1000 + "s");
     }
