@@ -25,11 +25,11 @@ public class FontBlanc2Main {
             g.fatal("Invalid action.");
         }
         FilePreferences fp = new FilePreferences(filePath, encrypt);
-        Deque<int[]> instructions = new LinkedList<>();
-        instructions.add(fp.createInstruction(1, 10));
-        instructions.add(fp.createInstruction(0,0));
+        Deque<Instruction> instructions = new LinkedList<>();
+        Instruction i = new Instruction(0, 0, encryptKey);
+        instructions.add(i);
         fp.setInstructions(instructions);
-        Cipher c = new Cipher(g, fp.getFileName(), fp.getInPath(), fp.getOutPath(), encryptKey, encrypt, fp.getInstructions());
+        Cipher c = new Cipher(g, fp.getFileName(), fp.getInPath(), fp.getOutPath(), encrypt, fp.getInstructions());
         c.execute();
         long endTime = System.currentTimeMillis();
         System.out.println("Program execution time: " + ((double)endTime - (double)startTime)/1000 + "s");

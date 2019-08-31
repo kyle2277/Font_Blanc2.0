@@ -22,15 +22,14 @@ public class Cipher {
     private long bytes_remaining;
     private boolean encrypt;
     private Globals g;
-    private  Deque<int[]> instructions;
+    private  Deque<Instruction> instructions;
     private HashMap<Integer, Mat> permut_map;
-    private static final int MAX_DIMENSION = 1024;
+    public static final int MAX_DIMENSION = 1024;
 
-    public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey,
-                  boolean encrypt, Deque<int[]> instructions) {
+    public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath,
+                  boolean encrypt, Deque<Instruction> instructions) {
         this.g = g;
         this.encrypt = encrypt;
-        encrypt_key = encryptKey;
         justPath = fileInPath;
         this.fileName = fileName;
         if(fileOutPath != null) {
@@ -39,9 +38,9 @@ public class Cipher {
             this.fileOutPath = fileInPath;
         }
         System.out.println("Encrypt key: " + Arrays.toString(encrypt_key));
-        encrypt_key_val = getEncryptKeyVal();
         bytes_processed = 0;
         fileLength = fileLength(g);
+        System.out.println("File length: " + fileLength);
         bytes_remaining = fileLength;
         this.instructions = instructions;
         permut_map = new HashMap<>();
@@ -66,7 +65,7 @@ public class Cipher {
 
     private int getEncryptKeyVal() {
         int sum = 0;
-        for(char ch: encrypt_key) {
+        for(char ch: getEncryptKey()) {
             sum += ch;
         }
         return sum;
@@ -86,24 +85,33 @@ public class Cipher {
      */
     private void readInstructions() {
         int coeff = isEncrypt() ? 1 : -1;
-        Deque<int[]> instructions = getInstructions();
-        int[] current = isEncrypt() ? instructions.pollFirst() : instructions.pollLast();
+        Deque<Instruction> instructions = getInstructions();
+        Instruction current = isEncrypt() ? instructions.pollFirst() : instructions.pollLast();
         if(current != null) {
             while(current != null) {
                 setBytesRemaining(getFileLength());
                 setBytesProcessed(0);
-                int flexible = current[0];
-                int dimension = current[1];
+                int flexible = current.getFixed();
+                int dimension = current.getDimension();
+                char[] encryptKey = current.getEncryptKey();
+                setEncryptKey(encryptKey);
+                setEncrypt_key_val(getEncryptKeyVal());
                 if(flexible > 0) { //fixed dimension
                     fixedDistributor(dimension, coeff);
                 } else { //flexible dimension
                     randDistributor(coeff);
                 }
+                System.out.println("Done.");
                 current = isEncrypt() ? instructions.pollFirst() : instructions.pollLast();
+                purgeKey();
             }
         } else {
             g.fatal("Process instructions empty.");
         }
+    }
+
+    private void purgeKey() {
+        Arrays.fill(getEncryptKey(), '0');
     }
 
     private byte[] readInput() {
@@ -202,7 +210,7 @@ public class Cipher {
         //dot check
         int dotBef = dotProduct(vec, m.getCheckBef(), dimension);
         int dotAft = dotProduct(resultantVec, m.getCheckAft(), dimension);
-        System.out.println(dotBef + "\n" + dotAft);
+        //System.out.println(dotBef + "\n" + dotAft);
         if(dotBef != dotAft) {
             String message = "Data corruption detected.\nUnencrypted bytes remaining: " + getBytesRemaining();
             g.fatal(message);
@@ -396,7 +404,19 @@ public class Cipher {
         getFileBytes()[index] = b;
     }
 
-    public Deque<int[]> getInstructions() {
+    public Deque<Instruction> getInstructions() {
         return instructions;
+    }
+
+    private void setEncryptKey(char[] encrypt_key) {
+        this.encrypt_key = encrypt_key;
+    }
+
+    private char[] getEncryptKey() {
+        return encrypt_key;
+    }
+
+    private void setEncrypt_key_val(int encrypt_key_val) {
+        this.encrypt_key_val = encrypt_key_val;
     }
 }

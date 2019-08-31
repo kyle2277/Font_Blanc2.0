@@ -1,5 +1,7 @@
 package main.swing_gui;
 
+import main.encryption_engine.*;
+
 import java.io.*;
 import java.util.*;
 
@@ -10,7 +12,7 @@ public class FilePreferences {
     private String outPath;
     private char[] encryptKey;
     private boolean encrypt;
-    private Deque<int[]> instructions;
+    private Deque<Instruction> instructions;
 
     public FilePreferences(String filePath, boolean encrypt) {
         this.encrypt = encrypt;
@@ -41,15 +43,6 @@ public class FilePreferences {
         fileName = split[splitLen - 1];
     }
 
-    public int[] createInstruction(int fixed, int dimension) {
-        int[] instruction = new int[] {0,0}; //preset flexible dimension
-        if(fixed > 0) { //fixed dimension
-            instruction[0] = fixed;
-            instruction[1] = dimension;
-        }
-        return instruction;
-    }
-
     public String getFileName() {
         return fileName;
     }
@@ -66,11 +59,11 @@ public class FilePreferences {
         return encryptKey;
     }
 
-    public void setInstructions(Deque<int[]> instructions) {
+    public void setInstructions(Deque<Instruction> instructions) {
         this.instructions = instructions;
     }
 
-    public Deque<int[]> getInstructions() {
+    public Deque<Instruction> getInstructions() {
         return instructions;
     }
 

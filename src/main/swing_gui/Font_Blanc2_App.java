@@ -1,6 +1,7 @@
 package main.swing_gui;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -8,17 +9,13 @@ import java.util.*;
 import main.encryption_engine.*;
 
 public class Font_Blanc2_App {
-    private JButton openFileButton;
     private JPanel panelMain;
     private JTextArea DnD_area;
-    private JButton advancedReset;
     private JList fileList;
     private DefaultListModel lm;
-    private JButton removeSelectedButton;
-    private JButton preferencesButton;
+    private JButton removeInstructionButton;
     private JCheckBox advancedCheckBox;
     private JTextArea statusArea;
-    private JButton copyPrefsButton;
     private JTextField outputField;
     private JCheckBox outputCheckbox;
     private JPasswordField keyField;
@@ -27,7 +24,7 @@ public class Font_Blanc2_App {
     private JButton setOutputButton;
     private JLabel keyLabel;
     private JLabel outputLabel;
-    private JButton simpleReset;
+    private JButton Reset;
     private JRadioButton encryptRadioButton;
     private JRadioButton decryptRadioButton;
     private JButton openFileSimple;
@@ -37,9 +34,16 @@ public class Font_Blanc2_App {
     private JLabel errorKeyLabel;
     private JLabel errorPathLabel;
     private JCheckBox extCheckBox;
+    private JRadioButton fixedRadioButton;
+    private JRadioButton flexibleRadioButton;
+    private JTextField fixedDimField;
+    private JPanel radioDimPanel;
+    private JPasswordField advKeyInput;
+    private JButton addInstructionButton;
+    private JPanel advPanel;
+    private JPanel encryptRadioPanel;
     private JFileChooser fc;
     private JFileChooser dc; //directory chooser
-    private HashMap<String, FilePreferences> fileMap;
     private FilePreferences curFile;
     private Globals g;
     private boolean running;
@@ -51,7 +55,16 @@ public class Font_Blanc2_App {
          ******************************************ADVANCED FUNCIONALITY*************************************************
          */
 
-        fileMap = new LinkedHashMap<>();
+        //set advanced borders
+        TitledBorder dimInputBorder = BorderFactory.createTitledBorder("Dimension (max 1024)");
+        fixedDimField.setBorder(dimInputBorder);
+        TitledBorder advRadioBorder = BorderFactory.createTitledBorder("Dimension Type");
+        radioDimPanel.setBorder(advRadioBorder);
+        TitledBorder advKeyBorder = BorderFactory.createTitledBorder("Encrypt Key");
+        advKeyInput.setBorder(advKeyBorder);
+        TitledBorder encryptBorder = BorderFactory.createTitledBorder("Mode");
+        encryptRadioPanel.setBorder(encryptBorder);
+
         lm = new DefaultListModel();
         fileList.setModel(lm);
 
@@ -63,60 +76,107 @@ public class Font_Blanc2_App {
                 if(selected) {
                     showAdvanced();
                 } else {
-                    showSimple();
-                }
-            }
-        });
-
-        //open file button
-        fc = new JFileChooser();
-        fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        openFileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                int returnVal = fc.showOpenDialog(panelMain);
-                if(returnVal == JFileChooser.APPROVE_OPTION) {
-                    File f = fc.getSelectedFile();
-                    String name = f.getName();
-                    lm.addElement(name);
-                    fileMap.put(name, new FilePreferences(f.getAbsolutePath(), true));
+                    hideAdvanced();
                 }
             }
         });
 
         //remove a file from the queue
-        removeSelectedButton.addActionListener(new ActionListener() {
+        removeInstructionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 int[] ind = fileList.getSelectedIndices();
                 if(ind.length > 0) {
                     int count = 0;
                     for(int i: ind) {
-                        String fileName = (String) lm.getElementAt(i-count);
                         lm.removeElementAt(i-count);
-                        fileMap.remove(fileName);
                         count++;
                     }
                 }
             }
         });
 
-        //set preferences for one file
-        preferencesButton.addActionListener(new ActionListener() {
+        addInstructionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                int ind = fileList.getSelectedIndex();
-                if(ind > 0) { // none selected
+                int fixed = 0;
+                int dimension = 0;
+                char[] key;
+                if(fixedRadioButton.isSelected()) {
+                    fixed = 1;
+                    String dim = fixedDimField.getText();
+                    try {
+                        dimension = Math.abs(Integer.parseInt(dim));
+                    } catch(NumberFormatException e) {
+                        fixedDimField.setBackground(Color.red);
+                        return;
+                    }
+                }
+                key = advKeyInput.getPassword();
+                if(key == null) {
+                    advKeyInput.setBackground(Color.red);
+                    return;
+                }
+                Instruction i = new Instruction(fixed, dimension, key);
+                lm.addElement(i);
+            }
+        });
 
+        fixedDimField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent focusEvent) {
+                super.focusGained(focusEvent);
+                fixedDimField.setBackground(Color.white);
+            }
+        });
+
+        advKeyInput.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent focusEvent) {
+                super.focusGained(focusEvent);
+                advKeyInput.setBackground(Color.white);
+            }
+        });
+
+        flexibleRadioButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if(flexibleRadioButton.isSelected()) {
+                    fixedDimField.setEnabled(false);
                 }
             }
         });
 
-        //advanced reset button
-        advancedReset.addActionListener(new ActionListener() {
+        fixedRadioButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                resetAdvanced();
+                if(fixedRadioButton.isSelected()) {
+                    fixedDimField.setEnabled(true);
+                }
+            }
+        });
+
+        advancedRun.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if(!isRunning()) {
+                    if(curFile != null && curFile.getOutPath() != null) {
+                        curFile.setInstructions(generateInstructions());
+                    } else {
+                        outputField.setBackground(Color.red);
+                        errorPathLabel.setVisible(true);
+                        return;
+                    }
+                    if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
+                            && curFile.getOutPath() != null && curFile.getInstructions() != null) {
+                        //create cipher
+                        progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
+                                curFile.isEncrypt(), curFile.getInstructions(), Font_Blanc2_App.this);
+                        //run thread
+                        Thread t = new Thread(c);
+                        t.start();
+                    }
+                }
             }
         });
 
@@ -124,29 +184,20 @@ public class Font_Blanc2_App {
          ***********************************END ADVANCED FUNCTIONALITY**************************************************
          */
 
+        fc = new JFileChooser();
         curFile = null;
         String logPath = new File(".").getAbsolutePath();
         logPath = logPath.substring(0, logPath.length()-1);
-        g = new Globals(DEFAULT_EXTENSION, logPath + "log.txt");
+        g = new Globals( DEFAULT_EXTENSION, logPath + "log.txt");
         running = false;
 
         //files drag and dropped
         new FileDrop(DnD_area, new FileDrop.Listener() {
             public void filesDropped(File[] files) {
-                if(advancedCheckBox.isSelected()) {
-                    //advanced layout
-                    for(File f: files) {
-                        String name = f.getName();
-                        lm.addElement(name);
-                        fileMap.put(name, new FilePreferences(f.getAbsolutePath(), true));
-                    }
-                } else {
-                    //simple layout
-                    File f = files[0];
-                    curFile = new FilePreferences(f.getAbsolutePath(), encryptRadioButton.isSelected());
-                    outputField.setText(curFile.getOutPath());
-                    setStatus();
-                }
+                File f = files[0];
+                curFile = new FilePreferences(f.getAbsolutePath(), encryptRadioButton.isSelected());
+                outputField.setText(curFile.getOutPath());
+                setStatus();
             }
         });
 
@@ -248,9 +299,13 @@ public class Font_Blanc2_App {
         });
 
         //simple reset button
-        simpleReset.addActionListener(new ActionListener() {
+        Reset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                if(advancedCheckBox.isSelected()) { //reset advanced
+                    //clear preferences list
+                    resetAdvanced();
+                }
                 resetSimple();
             }
         });
@@ -315,10 +370,11 @@ public class Font_Blanc2_App {
                         errorPathLabel.setVisible(true);
                     } else if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
                             && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
-                        //create cipher
-                        curFile.setInstructions(generateInstructions());
+                        //create single instruction and cipher
+                        Deque<Instruction> instructions = new LinkedList<>();
+                        instructions.add(new Instruction(0, 0, curFile.getEncryptKey()));
                         progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
-                                curFile.getEncryptKey(), curFile.isEncrypt(), curFile.getInstructions(), Font_Blanc2_App.this);
+                                curFile.isEncrypt(), instructions, Font_Blanc2_App.this);
                         //run thread
                         Thread t = new Thread(c);
                         t.start();
@@ -326,6 +382,7 @@ public class Font_Blanc2_App {
                 }
             }
         });
+
     }
 
     /*
@@ -357,36 +414,30 @@ public class Font_Blanc2_App {
         if(!lm.isEmpty()) {
             lm.clear();
         }
-        if(!fileMap.isEmpty()) {
-            fileMap.clear();
-        }
+        fixedDimField.setText("");
+        advKeyInput.setText("");
+        flexibleRadioButton.setSelected(true);
+        fixedDimField.setEnabled(false);
+        //clear fields
     }
 
     public void showAdvanced() {
-        hideSimple();
-        fileList.setVisible(true);
-        openFileButton.setVisible(true);
-        removeSelectedButton.setVisible(true);
-        preferencesButton.setVisible(true);
-        copyPrefsButton.setVisible(true);
-        advancedRun.setVisible(true);
-        advancedReset.setVisible(true);
+        resetAdvanced();
+        advPanel.setVisible(true);
+        keyField.setText("");
+        keyField.setEnabled(false);
+        keyLabel.setEnabled(false);
+        simpleRun.setVisible(false);
     }
 
     public void hideAdvanced() {
         if(!lm.isEmpty()) {
             lm.clear();
         }
-        if(!fileMap.isEmpty()) {
-            fileMap.clear();
-        }
-        fileList.setVisible(false);
-        openFileButton.setVisible(false);
-        removeSelectedButton.setVisible(false);
-        preferencesButton.setVisible(false);
-        copyPrefsButton.setVisible(false);
-        advancedRun.setVisible(false);
-        advancedReset.setVisible(false);
+        advPanel.setVisible(false);
+        keyLabel.setEnabled(true);
+        keyField.setEnabled(true);
+        simpleRun.setVisible(true);
     }
 
     /*
@@ -412,39 +463,6 @@ public class Font_Blanc2_App {
         outputCheckbox.setSelected(true);
         outputField.setEditable(false);
         setOutputButton.setEnabled(false);
-    }
-
-    public void showSimple() {
-        hideAdvanced();
-        openFileSimple.setVisible(true);
-        keyLabel.setVisible(true);
-        keyField.setVisible(true);
-        keyField.setText("");
-        outputLabel.setVisible(true);
-        outputCheckbox.setVisible(true);
-        outputCheckbox.setSelected(true);
-        outputField.setVisible(true);
-        outputField.setText("");
-        setOutputButton.setVisible(true);
-        setOutputButton.setEnabled(false);
-        statusArea.setVisible(true);
-        simpleRun.setVisible(true);
-        simpleReset.setVisible(true);
-    }
-
-    public void hideSimple() {
-        //reset curFile
-        resetSimple();
-        openFileSimple.setVisible(false);
-        keyLabel.setVisible(false);
-        keyField.setVisible(false);
-        outputLabel.setVisible(false);
-        outputCheckbox.setVisible(false);
-        outputField.setVisible(false);
-        setOutputButton.setVisible(false);
-        statusArea.setVisible(false);
-        simpleRun.setVisible(false);
-        simpleReset.setVisible(false);
     }
 
     public void setStatus() {
@@ -483,10 +501,15 @@ public class Font_Blanc2_App {
         curFile = null;
     }
 
-    public Deque<int[]> generateInstructions() {
-        Deque<int[]> instructions = new LinkedList<>();
-        //instructions.add(curFile.createInstruction(1, 1024));
-        instructions.add(curFile.createInstruction(0,0));
+    public Deque<Instruction> generateInstructions() {
+        Deque<Instruction> instructions = new LinkedList<>();
+        for(int i = 0; i < lm.getSize(); i++) {
+            Instruction cur = (Instruction) lm.getElementAt(i);
+            if((cur.getFixed() > 0) && cur.getDimension() > Cipher.MAX_DIMENSION) {
+                cur.setDimension(Cipher.MAX_DIMENSION);
+            }
+            instructions.add(cur);
+        }
         return instructions;
     }
 
@@ -498,6 +521,6 @@ public class Font_Blanc2_App {
         f.pack();
         //f.setSize(600,400);
         f.setVisible(true);
-        app.showSimple();
+        app.hideAdvanced();
     }
 }

@@ -11,9 +11,9 @@ public class progressCipher extends Cipher implements Runnable {
 
     private Font_Blanc2_App app;
 
-    public progressCipher(Globals g, String fileName, String fileInPath, String fileOutPath, char[] encryptKey,
-                          boolean encrypt, Deque<int[]> instructions, Font_Blanc2_App app) {
-        super(g, fileName, fileInPath, fileOutPath, encryptKey, encrypt, instructions);
+    public progressCipher(Globals g, String fileName, String fileInPath, String fileOutPath,
+                          boolean encrypt, Deque<Instruction> instructions, Font_Blanc2_App app) {
+        super(g, fileName, fileInPath, fileOutPath, encrypt, instructions);
         this.app = app;
     }
 
