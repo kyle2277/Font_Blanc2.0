@@ -4,18 +4,13 @@ import java.util.Arrays;
 
 public class Instruction {
 
-    private int fixed;
+    //TODO remove "fixed" field
     private int dimension;
     private char[] encryptKey;
 
-    public Instruction(int fixed, int dimension, char[] encryptKey) {
-        this.fixed = fixed;
+    public Instruction(int dimension, char[] encryptKey) {
         this.dimension = dimension;
         this.encryptKey = encryptKey;
-    }
-
-    public int getFixed() {
-        return fixed;
     }
 
     public int getDimension() {
@@ -32,7 +27,7 @@ public class Instruction {
 
     public String toString() {
         String readout = "Fixed: ";
-        readout += getFixed() == 1 ? "Yes, Dimension: " + getDimension() + ", " : "No, ";
+        readout += getDimension() > 0 ? "Yes, Dimension: " + getDimension() + ", " : "No, ";
         readout += "Encrypt Key: " + Arrays.toString(getEncryptKey());
         return readout;
     }

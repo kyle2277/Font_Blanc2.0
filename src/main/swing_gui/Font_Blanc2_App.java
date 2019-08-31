@@ -99,11 +99,9 @@ public class Font_Blanc2_App {
         addInstructionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                int fixed = 0;
                 int dimension = 0;
                 char[] key;
                 if(fixedRadioButton.isSelected()) {
-                    fixed = 1;
                     String dim = fixedDimField.getText();
                     try {
                         dimension = Math.abs(Integer.parseInt(dim));
@@ -113,11 +111,11 @@ public class Font_Blanc2_App {
                     }
                 }
                 key = advKeyInput.getPassword();
-                if(key == null) {
+                if(key.length == 0) {
                     advKeyInput.setBackground(Color.red);
                     return;
                 }
-                Instruction i = new Instruction(fixed, dimension, key);
+                Instruction i = new Instruction(dimension, key);
                 lm.addElement(i);
             }
         });
@@ -372,7 +370,7 @@ public class Font_Blanc2_App {
                             && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
                         //create single instruction and cipher
                         Deque<Instruction> instructions = new LinkedList<>();
-                        instructions.add(new Instruction(0, 0, curFile.getEncryptKey()));
+                        instructions.add(new Instruction(0, curFile.getEncryptKey()));
                         progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
                                 curFile.isEncrypt(), instructions, Font_Blanc2_App.this);
                         //run thread
@@ -416,6 +414,8 @@ public class Font_Blanc2_App {
         }
         fixedDimField.setText("");
         advKeyInput.setText("");
+        fixedDimField.setBackground(Color.white);
+        advKeyInput.setBackground(Color.white);
         flexibleRadioButton.setSelected(true);
         fixedDimField.setEnabled(false);
         //clear fields
@@ -505,7 +505,7 @@ public class Font_Blanc2_App {
         Deque<Instruction> instructions = new LinkedList<>();
         for(int i = 0; i < lm.getSize(); i++) {
             Instruction cur = (Instruction) lm.getElementAt(i);
-            if((cur.getFixed() > 0) && cur.getDimension() > Cipher.MAX_DIMENSION) {
+            if((cur.getDimension() > 0) && cur.getDimension() > Cipher.MAX_DIMENSION) {
                 cur.setDimension(Cipher.MAX_DIMENSION);
             }
             instructions.add(cur);

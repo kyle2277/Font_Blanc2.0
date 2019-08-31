@@ -26,7 +26,7 @@ public class FontBlanc2Main {
         }
         FilePreferences fp = new FilePreferences(filePath, encrypt);
         Deque<Instruction> instructions = new LinkedList<>();
-        Instruction i = new Instruction(0, 0, encryptKey);
+        Instruction i = new Instruction( 0, encryptKey);
         instructions.add(i);
         fp.setInstructions(instructions);
         Cipher c = new Cipher(g, fp.getFileName(), fp.getInPath(), fp.getOutPath(), encrypt, fp.getInstructions());

@@ -91,12 +91,11 @@ public class Cipher {
             while(current != null) {
                 setBytesRemaining(getFileLength());
                 setBytesProcessed(0);
-                int flexible = current.getFixed();
                 int dimension = current.getDimension();
                 char[] encryptKey = current.getEncryptKey();
                 setEncryptKey(encryptKey);
                 setEncrypt_key_val(getEncryptKeyVal());
-                if(flexible > 0) { //fixed dimension
+                if(dimension > 0) { //fixed dimension
                     fixedDistributor(dimension, coeff);
                 } else { //flexible dimension
                     randDistributor(coeff);
