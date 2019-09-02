@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 public class Instruction {
 
-    //TODO remove "fixed" field
     private int dimension;
     private char[] encryptKey;
 

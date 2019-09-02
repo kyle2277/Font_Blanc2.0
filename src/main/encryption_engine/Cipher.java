@@ -37,13 +37,11 @@ public class Cipher {
         } else {
             this.fileOutPath = fileInPath;
         }
-        System.out.println("Encrypt key: " + Arrays.toString(encrypt_key));
         bytes_processed = 0;
         fileLength = fileLength(g);
         System.out.println("File length: " + fileLength);
         bytes_remaining = fileLength;
         this.instructions = instructions;
-        permut_map = new HashMap<>();
     }
 
     /*
@@ -58,20 +56,20 @@ public class Cipher {
         if(f.exists()) {
             return f.length();
         } else {
-            g.fatal("File " + getFileName() + " does not exist.");
+            g.fatal("File " + getFileName() + " does not exist at given path.");
             return 0;
         }
     }
 
-    private int getEncryptKeyVal() {
+    private int charSum(char[] s) {
         int sum = 0;
-        for(char ch: getEncryptKey()) {
+        for(char ch: s) {
             sum += ch;
         }
         return sum;
     }
 
-    protected int execute() {
+    protected int execute() throws IOException{
         byte[] fileBytes = readInput();
         setFileBytes(fileBytes);
         readInstructions();
@@ -91,10 +89,13 @@ public class Cipher {
             while(current != null) {
                 setBytesRemaining(getFileLength());
                 setBytesProcessed(0);
+                //todo zero out old map matrices
+                setPermutMap(new HashMap<>());
                 int dimension = current.getDimension();
                 char[] encryptKey = current.getEncryptKey();
                 setEncryptKey(encryptKey);
-                setEncrypt_key_val(getEncryptKeyVal());
+                System.out.println("Encrypt key: " + Arrays.toString(getEncryptKey()));
+                setEncryptKeyVal(charSum(encryptKey));
                 if(dimension > 0) { //fixed dimension
                     fixedDistributor(dimension, coeff);
                 } else { //flexible dimension
@@ -111,25 +112,25 @@ public class Cipher {
 
     private void purgeKey() {
         Arrays.fill(getEncryptKey(), '0');
+        setEncryptKeyVal(0);
     }
 
-    private byte[] readInput() {
+    public void close() {
+        Arrays.fill(getFileBytes(), (byte)0);
+    }
+
+    private byte[] readInput() throws IOException {
         //todo file size limited to ~2GB by cast to int
-        try {
-            byte[] fileBytes = new byte[(int)getFileLength()];
-            String inPath = getJustPath() + getFileName();
-            FileInputStream in = new FileInputStream(inPath);
-            in.read(fileBytes, 0, (int)getFileLength());
-            in.close();
-            return fileBytes;
-        } catch (IOException e) {
-            g.fatal("File " + getFileName() + " not found.");
-        }
-        return null;
+        byte[] fileBytes = new byte[(int)getFileLength()];
+        String inPath = getJustPath() + getFileName();
+        FileInputStream in = new FileInputStream(inPath);
+        in.read(fileBytes, 0, (int)getFileLength());
+        in.close();
+        return fileBytes;
     }
 
-    private void writeOutput() {
-        FileOutputStream out;
+    private void writeOutput() throws IOException {
+        FileOutputStream out = null;
         try {
             String outName = getFileName();
             if(isEncrypt()) {
@@ -147,6 +148,8 @@ public class Cipher {
             out.write(getFileBytes(), 0, (int)getFileLength());
         } catch (IOException e) {
             g.fatal("Output path not found.");
+        } finally {
+            if(out != null) { out.close(); }
         }
     }
 
@@ -163,11 +166,13 @@ public class Cipher {
             //generate permutation dimension
             int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr % encryptMapLen));
             int dimension = permutDimension > 1 ? (MAX_DIMENSION - (MAX_DIMENSION / permutDimension)) : MAX_DIMENSION;
+            System.out.println(dimension);
             permutCipher(coeff*dimension);
         }
         int b = (int) getBytesRemaining();
         if(b > 0) {
-            permutCipher(coeff * (int) bytes_remaining);
+            System.out.println(b);
+            permutCipher(coeff*b);
         }
     }
 
@@ -177,11 +182,13 @@ public class Cipher {
      */
     public void fixedDistributor(int dimension, int coeff) {
         while(getBytesRemaining() >= dimension) {
+            System.out.println(dimension);
             permutCipher(coeff*dimension);
         }
         int b = (int) getBytesRemaining();
         if(b > 0) {
-            permutCipher(coeff*(int)getBytesRemaining());
+            System.out.println(b);
+            permutCipher(coeff*b);
         }
     }
 
@@ -191,7 +198,7 @@ public class Cipher {
     Writes resulting vector of bytes to file
     */
     protected void permutCipher(int dimension) {
-        long ref = getBytesProcessed();
+        int ref = (int)getBytesProcessed();
         Mat m;
         if(permut_map.containsKey(dimension)) {
             m = permut_map.get(dimension);
@@ -202,7 +209,7 @@ public class Cipher {
         //dimension no longer needs to be negative to signify inverse operation
         dimension = Math.abs(dimension);
         byte[] fileBytes;
-        fileBytes = Arrays.copyOfRange(getFileBytes(), (int)ref, (int)ref+dimension);
+        fileBytes = Arrays.copyOfRange(getFileBytes(), ref, ref+dimension);
         //System.out.println(Arrays.toString(unencryptedBytes));
         DMatrixSparseCSC vec = bArrToCSCMat(fileBytes, dimension);
         DMatrixSparseCSC resultantVec = transformVec(dimension, vec, m.getMat());
@@ -215,8 +222,8 @@ public class Cipher {
             g.fatal(message);
             System.exit(1);
         }
-        for(int i = (int)ref; i < ref+dimension; i++) {
-            byte write_byte = (byte) ((Math.round(resultantVec.get(i-(int)ref, 0))) & 0xff);
+        for(int i = ref; i < ref+dimension; i++) {
+            byte write_byte = (byte) ((Math.round(resultantVec.get(i-ref, 0))) & 0xff);
             setFileByte(write_byte, i);
             //System.out.println(write_byte);
         }
@@ -260,7 +267,7 @@ public class Cipher {
     Generates unique, pseudo-random string of numbers using the encryption key
     */
     private String genLogBaseStr(double logBase) {
-        double sum_log = Math.log(encrypt_key_val)/Math.log(logBase);
+        double sum_log = Math.log(getEncryptKeyVal())/Math.log(logBase);
         String sum_str = sum_log + "";
         sum_str = sum_str.replaceAll("[.]", "");
         sum_str = extend(sum_str);
@@ -371,6 +378,10 @@ public class Cipher {
         return permut_map.get(k);
     }
 
+    public void setPermutMap(HashMap<Integer, Mat> permut_map) {
+        this.permut_map = permut_map;
+    }
+
     public boolean permutMapContainsKey(int k) {
         return permut_map.containsKey(k);
     }
@@ -415,7 +426,11 @@ public class Cipher {
         return encrypt_key;
     }
 
-    private void setEncrypt_key_val(int encrypt_key_val) {
+    private void setEncryptKeyVal(int encrypt_key_val) {
         this.encrypt_key_val = encrypt_key_val;
+    }
+
+    private int getEncryptKeyVal() {
+        return encrypt_key_val;
     }
 }

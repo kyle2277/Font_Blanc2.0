@@ -1,7 +1,6 @@
 package main.encryption_engine;
 
 import main.swing_gui.Font_Blanc2_App;
-import java.io.*;
 import java.util.*;
 
 /*
@@ -28,6 +27,7 @@ public class progressCipher extends Cipher implements Runnable {
             app.setProgressBar(100);
             app.setProgressLabel("Done");
             System.out.println("Done");
+            this.close();
             long endTime = System.currentTimeMillis();
             System.out.println("Program execution time: " + ((double)endTime - (double)startTime)/1000 + "s");
         } catch (Exception e) {

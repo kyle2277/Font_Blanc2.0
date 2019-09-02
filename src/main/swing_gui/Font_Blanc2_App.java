@@ -186,7 +186,8 @@ public class Font_Blanc2_App {
         curFile = null;
         String logPath = new File(".").getAbsolutePath();
         logPath = logPath.substring(0, logPath.length()-1);
-        g = new Globals( DEFAULT_EXTENSION, logPath + "log.txt");
+//        g = new Globals("e_", "d_", DEFAULT_EXTENSION, logPath + "log.txt");
+        g = new Globals(DEFAULT_EXTENSION, logPath + "log.txt");
         running = false;
 
         //files drag and dropped

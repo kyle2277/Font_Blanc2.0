@@ -33,4 +33,5 @@ public class Mat {
     public DMatrixSparseCSC getMat() {
         return m;
     }
+
 }
