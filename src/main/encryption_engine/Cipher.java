@@ -166,12 +166,10 @@ public class Cipher {
             //generate permutation dimension
             int permutDimension = Character.getNumericValue(encryptMap.charAt(mapItr % encryptMapLen));
             int dimension = permutDimension > 1 ? (MAX_DIMENSION - (MAX_DIMENSION / permutDimension)) : MAX_DIMENSION;
-            System.out.println(dimension);
             permutCipher(coeff*dimension);
         }
         int b = (int) getBytesRemaining();
         if(b > 0) {
-            System.out.println(b);
             permutCipher(coeff*b);
         }
     }
@@ -182,12 +180,10 @@ public class Cipher {
      */
     public void fixedDistributor(int dimension, int coeff) {
         while(getBytesRemaining() >= dimension) {
-            System.out.println(dimension);
             permutCipher(coeff*dimension);
         }
         int b = (int) getBytesRemaining();
         if(b > 0) {
-            System.out.println(b);
             permutCipher(coeff*b);
         }
     }

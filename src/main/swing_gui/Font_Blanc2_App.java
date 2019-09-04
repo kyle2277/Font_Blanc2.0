@@ -72,11 +72,15 @@ public class Font_Blanc2_App {
         advancedCheckBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                boolean selected = advancedCheckBox.isSelected();
-                if(selected) {
-                    showAdvanced();
+                if(!isRunning()) {
+                    boolean selected = advancedCheckBox.isSelected();
+                    if(selected) {
+                        showAdvanced();
+                    } else {
+                        hideAdvanced();
+                    }
                 } else {
-                    hideAdvanced();
+                    runningError();
                 }
             }
         });
@@ -158,22 +162,29 @@ public class Font_Blanc2_App {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 if(!isRunning()) {
-                    if(curFile != null && curFile.getOutPath() != null) {
-                        curFile.setInstructions(generateInstructions());
+                    if(curFile != null) {
+                        curFile.setOutPath(outputField.getText());
+                        if(curFile != null && curFile.getOutPath() != null) {
+                            curFile.setInstructions(generateInstructions());
+                        } else {
+                            outputField.setBackground(Color.red);
+                            errorPathLabel.setVisible(true);
+                            return;
+                        }
+                        if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
+                                && curFile.getOutPath() != null && curFile.getInstructions() != null) {
+                            //create cipher
+                            progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
+                                    curFile.isEncrypt(), curFile.getInstructions(), Font_Blanc2_App.this);
+                            //run thread
+                            Thread t = new Thread(c);
+                            t.start();
+                        }
                     } else {
-                        outputField.setBackground(Color.red);
-                        errorPathLabel.setVisible(true);
-                        return;
+                        noFileError();
                     }
-                    if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
-                            && curFile.getOutPath() != null && curFile.getInstructions() != null) {
-                        //create cipher
-                        progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
-                                curFile.isEncrypt(), curFile.getInstructions(), Font_Blanc2_App.this);
-                        //run thread
-                        Thread t = new Thread(c);
-                        t.start();
-                    }
+                } else {
+                    runningError();
                 }
             }
         });
@@ -193,6 +204,9 @@ public class Font_Blanc2_App {
         //files drag and dropped
         new FileDrop(DnD_area, new FileDrop.Listener() {
             public void filesDropped(File[] files) {
+                if(curFile != null) {
+                    cleanCurFile();
+                }
                 File f = files[0];
                 curFile = new FilePreferences(f.getAbsolutePath(), encryptRadioButton.isSelected());
                 outputField.setText(curFile.getOutPath());
@@ -301,11 +315,16 @@ public class Font_Blanc2_App {
         Reset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                if(advancedCheckBox.isSelected()) { //reset advanced
-                    //clear preferences list
-                    resetAdvanced();
+                if(!isRunning()) {
+                    if(advancedCheckBox.isSelected()) { //reset advanced
+                        //clear preferences list
+                        resetAdvanced();
+                    }
+                    resetSimple();
+                } else {
+                    runningError();
                 }
-                resetSimple();
+
             }
         });
 
@@ -361,23 +380,31 @@ public class Font_Blanc2_App {
             public void actionPerformed(ActionEvent actionEvent) {
                 //check curFile has no null fields
                 if(!isRunning()) {
-                    if(curFile != null && curFile.getEncryptKey() == null) {
-                        keyField.setBackground(Color.red);
-                        errorKeyLabel.setVisible(true);
-                    } else if(curFile != null && curFile.getOutPath() == null) {
-                        outputField.setBackground(Color.red);
-                        errorPathLabel.setVisible(true);
-                    } else if(curFile != null && curFile.getFileName() != null && curFile.getInPath() != null
-                            && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
-                        //create single instruction and cipher
-                        Deque<Instruction> instructions = new LinkedList<>();
-                        instructions.add(new Instruction(0, curFile.getEncryptKey()));
-                        progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
-                                curFile.isEncrypt(), instructions, Font_Blanc2_App.this);
-                        //run thread
-                        Thread t = new Thread(c);
-                        t.start();
+                    if(curFile != null) {
+                        panelMain.setEnabled(false);
+                        checkFields();
+                        if (curFile.getEncryptKey() == null) {
+                            keyField.setBackground(Color.red);
+                            errorKeyLabel.setVisible(true);
+                        } else if (curFile.getOutPath() == null) {
+                            outputField.setBackground(Color.red);
+                            errorPathLabel.setVisible(true);
+                        } else if (curFile.getFileName() != null && curFile.getInPath() != null
+                                && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
+                            //create single instruction and cipher
+                            Deque<Instruction> instructions = new LinkedList<>();
+                            instructions.add(new Instruction(0, curFile.getEncryptKey()));
+                            progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
+                                    curFile.isEncrypt(), instructions, Font_Blanc2_App.this);
+                            //run thread
+                            Thread t = new Thread(c);
+                            t.start();
+                        }
+                    } else {
+                        noFileError();
                     }
+                } else {
+                    runningError();
                 }
             }
         });
@@ -410,6 +437,7 @@ public class Font_Blanc2_App {
 
     //reset the app home frame
     public void resetAdvanced() {
+        cleanCurFile();
         if(!lm.isEmpty()) {
             lm.clear();
         }
@@ -419,6 +447,8 @@ public class Font_Blanc2_App {
         advKeyInput.setBackground(Color.white);
         flexibleRadioButton.setSelected(true);
         fixedDimField.setEnabled(false);
+        progressBar.setValue(0);
+        progressLabel.setText("");
         //clear fields
     }
 
@@ -432,9 +462,7 @@ public class Font_Blanc2_App {
     }
 
     public void hideAdvanced() {
-        if(!lm.isEmpty()) {
-            lm.clear();
-        }
+        resetSimple();
         advPanel.setVisible(false);
         keyLabel.setEnabled(true);
         keyField.setEnabled(true);
@@ -512,6 +540,19 @@ public class Font_Blanc2_App {
             instructions.add(cur);
         }
         return instructions;
+    }
+
+    public void checkFields() {
+        curFile.setEncryptKey(keyField.getPassword());
+        curFile.setOutPath(outputField.getText());
+    }
+
+    public void runningError() {
+        JOptionPane.showMessageDialog(panelMain, "Busy.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public void noFileError() {
+        JOptionPane.showMessageDialog(panelMain, "No file added.", "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     public static void main(String[] args) {
