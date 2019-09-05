@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
+import main.swing_gui.*;
+
+import javax.swing.*;
 
 public class Globals {
 

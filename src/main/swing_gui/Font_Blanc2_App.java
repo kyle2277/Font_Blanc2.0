@@ -391,9 +391,13 @@ public class Font_Blanc2_App {
                             errorPathLabel.setVisible(true);
                         } else if (curFile.getFileName() != null && curFile.getInPath() != null
                                 && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
-                            //create single instruction and cipher
+                            //**********DEFAULT INSTRUCTIONS*****************************************
+                            //one layer fixed dimension at n = 1024
+                            //one layer flexible dimension
                             Deque<Instruction> instructions = new LinkedList<>();
+                            instructions.add(new Instruction(1024, curFile.getEncryptKey()));
                             instructions.add(new Instruction(0, curFile.getEncryptKey()));
+                            //***********************************************************************
                             progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
                                     curFile.isEncrypt(), instructions, Font_Blanc2_App.this);
                             //run thread
@@ -437,7 +441,6 @@ public class Font_Blanc2_App {
 
     //reset the app home frame
     public void resetAdvanced() {
-        cleanCurFile();
         if(!lm.isEmpty()) {
             lm.clear();
         }

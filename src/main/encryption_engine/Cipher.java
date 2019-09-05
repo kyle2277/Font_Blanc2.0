@@ -42,6 +42,7 @@ public class Cipher {
         System.out.println("File length: " + fileLength);
         bytes_remaining = fileLength;
         this.instructions = instructions;
+        setPermutMap(new HashMap<>());
     }
 
     /*
@@ -90,7 +91,6 @@ public class Cipher {
                 setBytesRemaining(getFileLength());
                 setBytesProcessed(0);
                 //todo zero out old map matrices
-                setPermutMap(new HashMap<>());
                 int dimension = current.getDimension();
                 char[] encryptKey = current.getEncryptKey();
                 setEncryptKey(encryptKey);
@@ -103,7 +103,12 @@ public class Cipher {
                 }
                 System.out.println("Done.");
                 current = isEncrypt() ? instructions.pollFirst() : instructions.pollLast();
-                purgeKey();
+                if(current != null && !Arrays.equals(current.getEncryptKey(), encryptKey)) {
+                    purgeKey();
+                    setPermutMap(new HashMap<>());
+                } else if(current == null) {
+                    purgeKey();
+                }
             }
         } else {
             g.fatal("Process instructions empty.");
