@@ -208,7 +208,7 @@ public class Font_Blanc2_App {
                     cleanCurFile();
                 }
                 File f = files[0];
-                curFile = new FilePreferences(f.getAbsolutePath(), encryptRadioButton.isSelected());
+                curFile = new FilePreferences(f.getAbsolutePath(), encryptRadioButton.isSelected(), f.length());
                 outputField.setText(curFile.getOutPath());
                 setStatus();
             }
@@ -237,7 +237,7 @@ public class Font_Blanc2_App {
                 int returnVal = fc.showOpenDialog(panelMain);
                 if(returnVal == JFileChooser.APPROVE_OPTION) {
                     File f = fc.getSelectedFile();
-                    curFile = new FilePreferences(f.getAbsolutePath(), encryptRadioButton.isSelected());
+                    curFile = new FilePreferences(f.getAbsolutePath(), encryptRadioButton.isSelected(), f.length());
                     outputField.setText(curFile.getOutPath());
                     setStatus();
                 }
@@ -505,6 +505,9 @@ public class Font_Blanc2_App {
             s.append(curFile.getInPath());
             s.append("\nOut: ");
             s.append(curFile.getOutPath());
+            s.append("\nFile size: ");
+            s.append(curFile.getFileLength());
+            s.append(" bytes");
             s.append("\nEncrypt: ");
             s.append(curFile.isEncrypt());
             s.append("\nKey: ");

@@ -12,10 +12,12 @@ public class FilePreferences {
     private String outPath;
     private char[] encryptKey;
     private boolean encrypt;
+    private long fileLength;
     private Deque<Instruction> instructions;
 
-    public FilePreferences(String filePath, boolean encrypt) {
+    public FilePreferences(String filePath, boolean encrypt, long fileLength) {
         this.encrypt = encrypt;
+        this.fileLength = fileLength;
         splitPath(filePath);
         outPath = inPath;
     }
@@ -89,6 +91,10 @@ public class FilePreferences {
 
     public void setEncrypt(boolean encrypt) {
         this.encrypt = encrypt;
+    }
+
+    public long getFileLength() {
+        return fileLength;
     }
 
     public static void clean(FilePreferences fp) {
