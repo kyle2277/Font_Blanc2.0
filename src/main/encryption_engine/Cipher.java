@@ -91,7 +91,8 @@ public class Cipher {
                 setBytesRemaining(getFileLength());
                 setBytesProcessed(0);
                 //todo zero out old map matrices
-                int dimension = current.getDimension();
+                int inputDimension = current.getDimension();
+                int dimension = inputDimension > MAX_DIMENSION ? MAX_DIMENSION : inputDimension;
                 char[] encryptKey = current.getEncryptKey();
                 setEncryptKey(encryptKey);
                 System.out.println("Encrypt key: " + Arrays.toString(getEncryptKey()));
