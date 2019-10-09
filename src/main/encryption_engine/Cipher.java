@@ -62,11 +62,18 @@ public class Cipher {
         }
     }
 
+    /*
+    Takes encrypt key char array
+    Returns a pseudo-random number representing the encrypt key
+     */
     private int charSum(char[] s) {
         int sum = 0;
-        for(char ch: s) {
-            sum += ch;
+        int key_len = s.length;
+        for(int i = 0; i < key_len-1; i++) {
+            int add = (s[i]+s[i+1])<<i;
+            sum = add-sum;
         }
+        System.out.println(sum);
         return sum;
     }
 
