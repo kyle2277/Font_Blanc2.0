@@ -31,7 +31,6 @@ public class Font_Blanc2_App {
     private JProgressBar progressBar;
     private JLabel progressLabel;
     private JButton extButton;
-    private JLabel errorKeyLabel;
     private JLabel errorPathLabel;
     private JCheckBox extCheckBox;
     private JRadioButton fixedRadioButton;
@@ -356,11 +355,7 @@ public class Font_Blanc2_App {
             @Override
             public void focusLost(FocusEvent focusEvent) {
                 super.focusLost(focusEvent);
-                if(curFile != null) {
-                    char[] encryptKey = keyField.getPassword();
-                    curFile.setEncryptKey(encryptKey);
-                    setStatus();
-                }
+                checkKeyField();
             }
         });
 
@@ -370,7 +365,6 @@ public class Font_Blanc2_App {
             public void focusGained(FocusEvent focusEvent) {
                 super.focusGained(focusEvent);
                 keyField.setBackground(Color.white);
-                errorKeyLabel.setVisible(false);
             }
         });
 
@@ -381,28 +375,28 @@ public class Font_Blanc2_App {
                 //check curFile has no null fields
                 if(!isRunning()) {
                     if(curFile != null) {
-                        panelMain.setEnabled(false);
-                        checkFields();
-                        if (curFile.getEncryptKey() == null) {
+                        //check encrypt key length
+                        if((curFile.getEncryptKey() == null) || (!(checkKeyField()))) {
                             keyField.setBackground(Color.red);
-                            errorKeyLabel.setVisible(true);
-                        } else if (curFile.getOutPath() == null) {
-                            outputField.setBackground(Color.red);
-                            errorPathLabel.setVisible(true);
-                        } else if (curFile.getFileName() != null && curFile.getInPath() != null
-                                && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
-                            //**********DEFAULT INSTRUCTIONS*****************************************
-                            //one layer fixed dimension at n = 1024
-                            //one layer flexible dimension
-                            Deque<Instruction> instructions = new LinkedList<>();
-                            instructions.add(new Instruction(1024, curFile.getEncryptKey()));
-                            instructions.add(new Instruction(0, curFile.getEncryptKey()));
-                            //***********************************************************************
-                            progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
-                                    curFile.isEncrypt(), instructions, Font_Blanc2_App.this);
-                            //run thread
-                            Thread t = new Thread(c);
-                            t.start();
+                            return;
+                        }
+                        if(checkOutputField()) {
+                            panelMain.setEnabled(false);
+                            if (curFile.getFileName() != null && curFile.getInPath() != null
+                                    && curFile.getOutPath() != null && curFile.getEncryptKey() != null) {
+                                //**********DEFAULT INSTRUCTIONS*****************************************
+                                //one layer fixed dimension at n = 1024
+                                //one layer flexible dimension
+                                Deque<Instruction> instructions = new LinkedList<>();
+                                instructions.add(new Instruction(1024, curFile.getEncryptKey()));
+                                instructions.add(new Instruction(0, curFile.getEncryptKey()));
+                                //***********************************************************************
+                                progressCipher c = new progressCipher(g, curFile.getFileName(), curFile.getInPath(), curFile.getOutPath(),
+                                        curFile.isEncrypt(), instructions, Font_Blanc2_App.this);
+                                //run thread
+                                Thread t = new Thread(c);
+                                t.start();
+                            }
                         }
                     } else {
                         noFileError();
@@ -482,7 +476,6 @@ public class Font_Blanc2_App {
         setStatus();
         keyField.setBackground(Color.white);
         outputField.setBackground(Color.white);
-        errorKeyLabel.setVisible(false);
         errorPathLabel.setVisible(false);
         g.setEncryptExt(DEFAULT_EXTENSION);
         extCheckBox.setSelected(true);
@@ -499,25 +492,24 @@ public class Font_Blanc2_App {
 
     public void setStatus() {
         if(curFile != null) {
-            StringBuilder s = new StringBuilder();
-            s.append(curFile.getFileName());
-            s.append("\nIn: ");
-            s.append(curFile.getInPath());
-            s.append("\nOut: ");
-            s.append(curFile.getOutPath());
-            s.append("\nFile size: ");
-            s.append(curFile.getFileLength());
-            s.append(" bytes");
-            s.append("\nEncrypt: ");
-            s.append(curFile.isEncrypt());
-            s.append("\nKey: ");
-            s.append(Arrays.toString(curFile.getEncryptKey()));
-            s.append("\nEncrypted extension: ");
-            s.append(g.encryptExt);
-            String status = s.toString();
-            statusArea.setText(status);
+            String s = "";
+            s += curFile.getFileName();
+            s += "\nIn: ";
+            s += curFile.getInPath();
+            s += "\nOut: ";
+            s += curFile.getOutPath();
+            s += "\nFile size: ";
+            s += curFile.getFileLength();
+            s += " bytes";
+            s += "\nEncrypt: ";
+            s += curFile.isEncrypt();
+            s += "\nKey: ";
+            s += Arrays.toString(curFile.getEncryptKey());
+            s += "\nEncrypted extension: ";
+            s += g.encryptExt;
+            statusArea.setText(s);
         } else {
-            statusArea.setText("");
+            statusArea.setText("No File Added.");
         }
     }
 
@@ -548,9 +540,15 @@ public class Font_Blanc2_App {
         return instructions;
     }
 
-    public void checkFields() {
-        curFile.setEncryptKey(keyField.getPassword());
+    public boolean checkOutputField() {
         curFile.setOutPath(outputField.getText());
+        if (curFile.getOutPath() == null) {
+            outputField.setBackground(Color.red);
+            errorPathLabel.setVisible(true);
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public void runningError() {
@@ -559,6 +557,27 @@ public class Font_Blanc2_App {
 
     public void noFileError() {
         JOptionPane.showMessageDialog(panelMain, "No file added.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public boolean checkKeyField() {
+        char[] encryptKey = keyField.getPassword();
+        int len = encryptKey.length;
+        if (len >= 5 && len <= 20) {
+            curFile.setEncryptKey(encryptKey);
+            setStatus();
+            return true;
+        } else {
+            return keyLengthError();
+        }
+    }
+
+    public boolean keyLengthError() {
+        curFile.setEncryptKey(null);
+        keyField.setBackground(Color.red);
+        JOptionPane.showMessageDialog(panelMain, "Key must be between 5 and 20 characters long.",
+                "Error", JOptionPane.ERROR_MESSAGE);
+        return false;
+
     }
 
     public static void main(String[] args) {
