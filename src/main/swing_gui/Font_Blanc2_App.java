@@ -567,14 +567,15 @@ public class Font_Blanc2_App {
             setStatus();
             return true;
         } else {
-            return keyLengthError();
+            return keyLengthError(len);
         }
     }
 
-    public boolean keyLengthError() {
+    public boolean keyLengthError(int keyLen) {
         curFile.setEncryptKey(null);
         keyField.setBackground(Color.red);
-        JOptionPane.showMessageDialog(panelMain, "Key must be between 5 and 20 characters long.",
+        String errorMsg = keyLen < 5 ? "more than 5 " : "less than 20 ";
+        JOptionPane.showMessageDialog(panelMain, "Key must be " + errorMsg + "characters long.",
                 "Error", JOptionPane.ERROR_MESSAGE);
         return false;
 
