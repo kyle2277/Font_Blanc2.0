@@ -2,6 +2,7 @@ package main.encryption_engine;
 
 import main.swing_gui.Font_Blanc2_App;
 import java.util.*;
+import java.io.*;
 
 /*
 A subclass of Cipher that updates progress of the encryption and supports multithreading
@@ -22,6 +23,7 @@ public class progressCipher extends Cipher implements Runnable {
         try {
             app.setRunning(true);
             app.setProgressLabel("Working");
+            //if(isEncrypt()) {   writeOut(getInstructions());    }
             app.setProgressBar(0);
             execute();
             app.setProgressBar(100);
@@ -42,6 +44,62 @@ public class progressCipher extends Cipher implements Runnable {
     protected void permutCipher(int dimension) {
         super.permutCipher(dimension);
         app.setProgressBar((int)(((double)getBytesProcessed()/(double)getFileLength())*100));
+    }
+
+    private void appendBuffer(StringBuilder strBuff, Instruction i) {
+        strBuff.append(i.getEncryptKey());
+        strBuff.append(" - ");
+        strBuff.append(i.getDimension());
+        strBuff.append("\n");
+    }
+
+    private int writeOut(Deque<Instruction> instructions) {
+        StringBuilder strBuff = new StringBuilder();
+        for (Instruction i : instructions) {
+            appendBuffer(strBuff, i);
+        }
+        //        if(isEncrypt()) {
+//            for(Instruction i : instructions) {
+//                appendBuffer(strBuff, i);
+//            }
+//        } else {
+//            Stack<Instruction> s = new Stack<>();
+//            for(Instruction i : instructions) {
+//                s.push(i);
+//            }
+//            for(int j = 0 ; j < instructions.size(); j++) {
+//                Instruction i = s.pop();
+//                appendBuffer(strBuff, i);
+//            }
+//
+//        }
+
+        String writeBuffer = strBuff.toString();
+        String [] execute = {"./FB_WO", "Encrypted", getJustPath(), getFileName(), writeBuffer};
+        ProcessBuilder p = new ProcessBuilder(execute);
+        String cwd = System.getProperty("user.dir");
+        p.directory(new File(cwd));
+        try {
+            Process process = p.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            int exitCode = -10;
+            try {
+                exitCode = process.waitFor();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("\nExited with error code: " + exitCode);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //put instructions in write buffer
+        //execute write out command
+        //return 1 on success
+        return 0;
     }
 
 }

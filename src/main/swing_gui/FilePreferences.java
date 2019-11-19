@@ -98,6 +98,7 @@ public class FilePreferences {
     }
 
     public static void clean(FilePreferences fp) {
+        // TODO clear entire encrypt key array on advanced reset
         Arrays.fill(fp.encryptKey, '0');
     }
 }

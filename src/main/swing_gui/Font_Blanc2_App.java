@@ -406,7 +406,6 @@ public class Font_Blanc2_App {
                 }
             }
         });
-
     }
 
     /*
@@ -435,6 +434,8 @@ public class Font_Blanc2_App {
 
     //reset the app home frame
     public void resetAdvanced() {
+        cleanCurFile();
+        setStatus();
         if(!lm.isEmpty()) {
             lm.clear();
         }
@@ -525,6 +526,7 @@ public class Font_Blanc2_App {
         if(curFile != null && curFile.getEncryptKey() != null && curFile.getEncryptKey().length > 0) {
             FilePreferences.clean(curFile);
         }
+        outputField.setText("");
         curFile = null;
     }
 
