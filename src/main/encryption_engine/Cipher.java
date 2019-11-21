@@ -25,6 +25,7 @@ public class Cipher {
     private  Deque<Instruction> instructions;
     private HashMap<Integer, Mat> permut_map;
     public static final int MAX_DIMENSION = 1024;
+    public FileWriter file;
 
     public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath,
                   boolean encrypt, Deque<Instruction> instructions) {
@@ -43,6 +44,11 @@ public class Cipher {
         bytes_remaining = fileLength;
         this.instructions = instructions;
         setPermutMap(new HashMap<>());
+        try {
+            file = new FileWriter("./data.csv");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /*
@@ -77,11 +83,12 @@ public class Cipher {
         return sum;
     }
 
-    protected int execute() throws IOException{
+    protected int execute() throws IOException {
         byte[] fileBytes = readInput();
         setFileBytes(fileBytes);
         readInstructions();
         writeOutput();
+        file.close();
         return 1;
     }
 
@@ -278,13 +285,17 @@ public class Cipher {
     private String genLogBaseStr(double logBase) {
         double sum_log = Math.log(getEncryptKeyVal())/Math.log(logBase);
         String sum_str = sum_log + "";
-        sum_str = sum_str.replaceAll("[.]", "");
-        sum_str = extend(sum_str);
-        return sum_str;
+        String[] split = sum_str.split("[.]");
+        String result = split[1];
+        if(result.length() > 15) {
+            result = result.substring(0,15);
+        }
+        System.out.println("log string: " + result);
+        return result;
     }
 
     /*
-	extends numbers with zeros in case they are too short to pair all values evenly
+	DEPRECATED - extends numbers with zeros in case they are too short to pair all values evenly
 	for creation of change of basis matrix
 	*/
     private String extend(String numStr) {
@@ -318,16 +329,19 @@ public class Cipher {
         for(int i = 0; i < dimension; rows.add(i), cols.add(i), checkBef.set(i, 0, i), i++);
         m.setCheckBef(checkBef);
         for(int i = 0; i < 2*dimension; i++) {
-            int row = Character.getNumericValue(nums.charAt(i));
-            row = row % rows.size();
+            int row = ((Character.getNumericValue(nums.charAt(i))+1) * dimension) % rows.size();
             int rowIndex = rows.remove(row);
             i++;
-            int column = Character.getNumericValue(nums.charAt(i));
-            column = column % cols.size();
+            int column = ((Character.getNumericValue(nums.charAt(i))+1) * dimension) % cols.size();
             int columnIndex = cols.remove(column);
             permut_matrix.set(rowIndex, columnIndex, 1);
             //System.out.println(rows);
             //System.out.println(cols);
+            try {
+                file.write(rowIndex + "," + columnIndex + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         DMatrixSparseCSC pm;
         if(inverse) {
@@ -347,11 +361,11 @@ public class Cipher {
 
     private String genStringVals(int approx) {
         int num_matrices = 1;
-        if(approx > 16) {
-            num_matrices = ((approx - (approx%16))/16) + 1;
+        if(approx > 15) {
+            num_matrices = ((approx - (approx%15))/15) + 1;
         }
         StringBuilder strTotal = new StringBuilder();
-        for(int i = 0; i < num_matrices; i++) {
+        for(int i = 2; i <= num_matrices+1; i++) {
             int logBaseStr = i + approx;
             String logStr = genLogBaseStr((double) logBaseStr);
             strTotal.append(logStr);
