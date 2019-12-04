@@ -25,7 +25,7 @@ public class Cipher {
     private  Deque<Instruction> instructions;
     private HashMap<Integer, Mat> permut_map;
     public static final int MAX_DIMENSION = 1024;
-    public FileWriter file;
+    //public FileWriter file;
 
     public Cipher(Globals g, String fileName, String fileInPath, String fileOutPath,
                   boolean encrypt, Deque<Instruction> instructions) {
@@ -44,11 +44,11 @@ public class Cipher {
         bytes_remaining = fileLength;
         this.instructions = instructions;
         setPermutMap(new HashMap<>());
-        try {
-            file = new FileWriter("./data.csv");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            file = new FileWriter("./data.csv");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     /*
@@ -88,7 +88,7 @@ public class Cipher {
         setFileBytes(fileBytes);
         readInstructions();
         writeOutput();
-        file.close();
+        //file.close();
         return 1;
     }
 
@@ -280,7 +280,7 @@ public class Cipher {
     }
 
     /*
-    Generates unique, pseudo-random string of numbers using the encryption key
+    Generates unique, pseudo-random string of 15 numbers (0-9) using the encryption key
     */
     private String genLogBaseStr(double logBase) {
         double sum_log = Math.log(getEncryptKeyVal())/Math.log(logBase);
@@ -289,25 +289,15 @@ public class Cipher {
         String result = split[1];
         if(result.length() > 15) {
             result = result.substring(0,15);
+        } else {
+            StringBuilder r_str = new StringBuilder(result);
+            while(r_str.length() < 15) {
+                r_str.append("0");
+            }
+            result = r_str.toString();
         }
         System.out.println("log string: " + result);
         return result;
-    }
-
-    /*
-	DEPRECATED - extends numbers with zeros in case they are too short to pair all values evenly
-	for creation of change of basis matrix
-	*/
-    private String extend(String numStr) {
-        int length = numStr.length();
-        if (length < 16) {
-            StringBuilder str = new StringBuilder(numStr);
-            for (int i = 0; i < (16 - length); i++) {
-                str.append("0");
-            }
-            numStr = str.toString();
-        }
-        return numStr;
     }
 
     /*
@@ -337,11 +327,11 @@ public class Cipher {
             permut_matrix.set(rowIndex, columnIndex, 1);
             //System.out.println(rows);
             //System.out.println(cols);
-            try {
-                file.write(rowIndex + "," + columnIndex + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                file.write(rowIndex + "," + columnIndex + "\n");
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
         }
         DMatrixSparseCSC pm;
         if(inverse) {

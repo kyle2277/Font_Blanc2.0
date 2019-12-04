@@ -23,7 +23,7 @@ public class progressCipher extends Cipher implements Runnable {
         try {
             app.setRunning(true);
             app.setProgressLabel("Working");
-            //if(isEncrypt()) {   writeOut(getInstructions());    }
+            if(isEncrypt()) {   writeOut(getInstructions());    }
             app.setProgressBar(0);
             execute();
             app.setProgressBar(100);
@@ -34,6 +34,7 @@ public class progressCipher extends Cipher implements Runnable {
             System.out.println("Program execution time: " + ((double)endTime - (double)startTime)/1000 + "s");
         } catch (Exception e) {
             System.out.println("Thread interrupted");
+            e.printStackTrace();
             System.exit(1);
         }
         app.cleanCurFile();
@@ -53,27 +54,11 @@ public class progressCipher extends Cipher implements Runnable {
         strBuff.append("\n");
     }
 
-    private int writeOut(Deque<Instruction> instructions) {
+    private void writeOut(Deque<Instruction> instructions) {
         StringBuilder strBuff = new StringBuilder();
         for (Instruction i : instructions) {
             appendBuffer(strBuff, i);
         }
-        //        if(isEncrypt()) {
-//            for(Instruction i : instructions) {
-//                appendBuffer(strBuff, i);
-//            }
-//        } else {
-//            Stack<Instruction> s = new Stack<>();
-//            for(Instruction i : instructions) {
-//                s.push(i);
-//            }
-//            for(int j = 0 ; j < instructions.size(); j++) {
-//                Instruction i = s.pop();
-//                appendBuffer(strBuff, i);
-//            }
-//
-//        }
-
         String writeBuffer = strBuff.toString();
         String [] execute = {"./FB_WO", "Encrypted", getJustPath(), getFileName(), writeBuffer};
         ProcessBuilder p = new ProcessBuilder(execute);
@@ -96,10 +81,6 @@ public class progressCipher extends Cipher implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //put instructions in write buffer
-        //execute write out command
-        //return 1 on success
-        return 0;
     }
 
 }

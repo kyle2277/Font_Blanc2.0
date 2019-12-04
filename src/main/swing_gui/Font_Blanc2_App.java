@@ -164,6 +164,11 @@ public class Font_Blanc2_App {
                     if(curFile != null) {
                         curFile.setOutPath(outputField.getText());
                         if(curFile != null && curFile.getOutPath() != null) {
+                            Deque<Instruction> instructions = generateInstructions();
+                            if(instructions == null) {
+                                noInstructionsError();
+                                return;
+                            }
                             curFile.setInstructions(generateInstructions());
                         } else {
                             outputField.setBackground(Color.red);
@@ -532,6 +537,9 @@ public class Font_Blanc2_App {
 
     public Deque<Instruction> generateInstructions() {
         Deque<Instruction> instructions = new LinkedList<>();
+        if(lm.isEmpty()) {
+            return null;
+        }
         for(int i = 0; i < lm.getSize(); i++) {
             Instruction cur = (Instruction) lm.getElementAt(i);
             if((cur.getDimension() > 0) && cur.getDimension() > Cipher.MAX_DIMENSION) {
@@ -559,6 +567,10 @@ public class Font_Blanc2_App {
 
     public void noFileError() {
         JOptionPane.showMessageDialog(panelMain, "No file added.", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public void noInstructionsError() {
+        JOptionPane.showMessageDialog(panelMain, "No instructions added", "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     public boolean checkKeyField() {
