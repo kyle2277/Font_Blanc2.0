@@ -1,7 +1,12 @@
+package main.encryption_engine;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
+import main.swing_gui.*;
+
+import javax.swing.*;
 
 public class Globals {
 
@@ -15,6 +20,10 @@ public class Globals {
         this.decryptTag = decryptTag;
         this.encryptExt = encryptExt;
         this.logPath = logPath;
+    }
+
+    public Globals(String encryptExt, String logPath) {
+        this("", "", encryptExt, logPath);
     }
 
     /*
@@ -38,6 +47,10 @@ public class Globals {
             System.out.println("Aborting.");
         }
         System.exit(1);
+    }
+
+    public void setEncryptExt(String ext) {
+        encryptExt = ext;
     }
 
 }
